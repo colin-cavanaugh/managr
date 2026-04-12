@@ -170,8 +170,8 @@ export const api = {
       return request<DirectoryListing>(`/files/list${params}`)
     },
 
-    analyze: (dirPath: string) =>
-      request<DirectoryAnalysis>(`/files/analyze?path=${encodeURIComponent(dirPath)}`),
+    analyze: (dirPath: string, deep = false) =>
+      request<DirectoryAnalysis>(`/files/analyze?path=${encodeURIComponent(dirPath)}${deep ? '&deep=true' : ''}`),
 
     size: (dirPath: string) =>
       request<{ path: string; size: number }>(`/files/size?path=${encodeURIComponent(dirPath)}`),

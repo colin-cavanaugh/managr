@@ -272,6 +272,7 @@ app.get('/api/files/size', async (req, res) => {
 
 app.get('/api/files/analyze', async (req, res) => {
   const dirPath = req.query.path as string
+  const deep = req.query.deep === 'true'
   if (!dirPath) return res.status(400).json({ error: 'path is required' })
 
   try {
@@ -280,8 +281,8 @@ app.get('/api/files/analyze', async (req, res) => {
     let dirCount = 0
     const byExtension: Record<string, { count: number; size: number }> = {}
 
-    // Recursive scan for accurate file type breakdown
     async function scan(dir: string, depth = 0): Promise<void> {
+      if (!deep && depth > 0) return
       if (depth > 10) return
       let entries
       try { entries = await fs.readdir(dir, { withFileTypes: true }) } catch { return }
@@ -291,7 +292,7 @@ app.get('/api/files/analyze', async (req, res) => {
         try {
           if (entry.isDirectory()) {
             if (depth === 0) dirCount++
-            await scan(fullPath, depth + 1)
+            if (deep) await scan(fullPath, depth + 1)
           } else if (entry.isFile()) {
             const stat = await fs.stat(fullPath)
             fileCount++
@@ -311,7 +312,7 @@ app.get('/api/files/analyze', async (req, res) => {
       .map(([ext, data]) => ({ extension: ext, ...data }))
       .sort((a, b) => b.size - a.size)
 
-    res.json({ path: dirPath, fileCount, dirCount, totalSize, breakdown })
+    res.json({ path: dirPath, deep, fileCount, dirCount, totalSize, breakdown })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
   }

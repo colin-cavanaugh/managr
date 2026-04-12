@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { Button, Select, Badge, Modal, Input, DirectoryPicker, FileIcon } from '../components'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Button, Select, Badge, Modal, Input, DirectoryPicker, FileIcon, Loader } from '../components'
 import { api, type DirectoryListing, type DirectoryAnalysis } from '../api/client'
 import styles from './ExplorerPage.module.css'
 
@@ -35,6 +35,11 @@ export function ExplorerPage() {
   const [analysis, setAnalysis] = useState<DirectoryAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deepScan, setDeepScan] = useState(false)
+  const [deepScanning, setDeepScanning] = useState(false)
+
+  // Cache: path → { listing, analysis, dirSizes }
+  const cache = useRef<Record<string, { listing: DirectoryListing; analysis: DirectoryAnalysis; dirSizes: Record<string, number> }>>({})
 
   // Lazy dir sizes
   const [dirSizes, setDirSizes] = useState<Record<string, number>>({})
@@ -159,14 +164,28 @@ export function ExplorerPage() {
   const [ruleTrigger, setRuleTrigger] = useState('file_created')
   const [ruleCreated, setRuleCreated] = useState(false)
 
-  const loadDirectory = async (dirPath: string) => {
+  const loadDirectory = useCallback(async (dirPath: string, skipCache = false) => {
     if (!dirPath) return
+
+    // Check cache first
+    if (!skipCache && cache.current[dirPath]) {
+      const cached = cache.current[dirPath]
+      setListing(cached.listing)
+      setAnalysis(cached.analysis)
+      setDirSizes(cached.dirSizes)
+      setCurrentPath(dirPath)
+      setSelected(new Set())
+      setDeepScan(false)
+      return
+    }
+
     setListing(null)
     setAnalysis(null)
     setSelected(new Set())
     lastClickedIdx.current = null
     setLoading(true)
     setError(null)
+    setDeepScan(false)
     setCurrentPath(dirPath)
     try {
       const [listResult, analysisResult] = await Promise.all([
@@ -176,10 +195,32 @@ export function ExplorerPage() {
       setListing(listResult)
       setAnalysis(analysisResult)
       setCurrentPath(listResult.path)
+      // Cache will be updated once dir sizes load too (in the effect)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  // Save to cache when dir sizes finish loading
+  useEffect(() => {
+    if (currentPath && listing && analysis && !sizesLoading) {
+      cache.current[currentPath] = { listing, analysis, dirSizes }
+    }
+  }, [currentPath, listing, analysis, dirSizes, sizesLoading])
+
+  const handleDeepScan = async () => {
+    if (!currentPath) return
+    setDeepScanning(true)
+    try {
+      const result = await api.files.analyze(currentPath, true)
+      setAnalysis(result)
+      setDeepScan(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setDeepScanning(false)
     }
   }
 
@@ -193,7 +234,7 @@ export function ExplorerPage() {
     try {
       await api.files.move(moveTarget, moveDest)
       setMoveTarget(null)
-      loadDirectory(currentPath)
+      loadDirectory(currentPath, true)
     } catch (err) { setError(err instanceof Error ? err.message : String(err)) }
   }
 
@@ -202,7 +243,7 @@ export function ExplorerPage() {
     try {
       await api.files.rename(renameTarget, renameValue)
       setRenameTarget(null)
-      loadDirectory(currentPath)
+      loadDirectory(currentPath, true)
     } catch (err) { setError(err instanceof Error ? err.message : String(err)) }
   }
 
@@ -212,7 +253,7 @@ export function ExplorerPage() {
       await api.files.delete(deleteTarget, !deletePermanent)
       setDeleteTarget(null)
       setDeletePermanent(false)
-      loadDirectory(currentPath)
+      loadDirectory(currentPath, true)
     } catch (err) { setError(err instanceof Error ? err.message : String(err)) }
   }
 
@@ -224,7 +265,7 @@ export function ExplorerPage() {
       await api.files.bulkMove([...selected], bulkMoveDest)
       setBulkMoveOpen(false)
       setBulkMoveDest('')
-      loadDirectory(currentPath)
+      loadDirectory(currentPath, true)
     } catch (err) { setError(err instanceof Error ? err.message : String(err)) }
   }
 
@@ -234,7 +275,7 @@ export function ExplorerPage() {
       await api.files.bulkDelete([...selected], !bulkDeletePermanent)
       setBulkDeleteOpen(false)
       setBulkDeletePermanent(false)
-      loadDirectory(currentPath)
+      loadDirectory(currentPath, true)
     } catch (err) { setError(err instanceof Error ? err.message : String(err)) }
   }
 
@@ -294,8 +335,8 @@ export function ExplorerPage() {
       )}
 
       {error && <div className={styles.error}>{error}</div>}
-      {loading && <div className={styles.loading}>Scanning directory...</div>}
-      {!currentPath && !loading && <div className={styles.loading} style={{ padding: '64px 20px' }}>Select a directory above to analyze its contents.</div>}
+      {loading && <Loader text="Scanning directory..." />}
+      {!currentPath && !loading && <Loader text="Select a directory above to analyze its contents." />}
 
       {!loading && analysis && (
         <>
@@ -310,12 +351,22 @@ export function ExplorerPage() {
             {/* Breakdown */}
             <div className={styles.breakdownPanel}>
               <div className={styles.breakdownHeader}>
-                <span className={styles.breakdownTitle}>File Types</span>
-                <Badge variant="ghost">{analysis.breakdown.length}</Badge>
+                <span className={styles.breakdownTitle}>
+                  File Types {deepScan && <Badge variant="primary">Deep</Badge>}
+                </span>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <Badge variant="ghost">{analysis.breakdown.length}</Badge>
+                  {!deepScan && !deepScanning && (
+                    <button className={styles.breakdownRule} style={{ opacity: 1 }} onClick={handleDeepScan}>
+                      Scan all subfolders
+                    </button>
+                  )}
+                  {deepScanning && <Loader size="inline" text="Deep scanning..." />}
+                </div>
               </div>
               <div className={styles.breakdownScroll}>
                 {analysis.breakdown.length === 0 ? (
-                  <div className={styles.loading}>No files</div>
+                  <Loader text="No files" />
                 ) : (
                   <div className={styles.breakdown}>
                     {analysis.breakdown.map(item => (
