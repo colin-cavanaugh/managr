@@ -15,11 +15,13 @@
     "build:server": "cd server && npx tsc",
     "build:all": "npm run build:server && npm run build",
     "build:electron": "npm run build:all && electron-builder",
+    "postinstall": "electron-builder install-app-deps",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@nicolo-ribaudo/chokidar-2": "^2.1.8-no-fsevents.3",
+    "better-sqlite3": "^12.9.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "vscode-icons-js": "^11.6.1"
@@ -56,8 +58,10 @@
       "server/package.json"
     ],
     "asarUnpack": [
-      "server/**/*"
+      "server/**/*",
+      "node_modules/better-sqlite3/**/*"
     ],
+    "afterPack": "./electron/afterPack.cjs",
     "win": {
       "target": [
         "nsis"

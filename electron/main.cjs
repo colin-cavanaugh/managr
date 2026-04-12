@@ -1,22 +1,12 @@
 const { app, BrowserWindow, shell } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const { spawn, execSync } = require('child_process')
+const { fork } = require('child_process')
 
 let mainWindow = null
 let apiProcess = null
 const API_PORT = 3456
 const isDev = process.env.NODE_ENV === 'development'
-
-function findSystemNode() {
-  try {
-    const cmd = process.platform === 'win32' ? 'where node' : 'which node'
-    const result = execSync(cmd, { encoding: 'utf-8', windowsHide: true }).trim()
-    return result.split(/\r?\n/)[0]
-  } catch {
-    return null
-  }
-}
 
 function getResourcePath(...segments) {
   const appPath = app.getAppPath()
@@ -28,28 +18,15 @@ function getResourcePath(...segments) {
 
 function startApiServer() {
   const apiPath = getResourcePath('server', 'dist', 'src', 'api.js')
-  const nodePath = findSystemNode()
-
   console.log(`[managr] API: ${apiPath}`)
-  console.log(`[managr] Node: ${nodePath || 'not found, using fork'}`)
 
-  if (nodePath) {
-    // Use system Node — guaranteed to work with installed native modules
-    apiProcess = spawn(nodePath, [apiPath], {
-      env: { ...process.env, MANAGR_API_PORT: String(API_PORT) },
-      cwd: path.dirname(apiPath),
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    })
-  } else {
-    // Fallback: fork with Electron's Node
-    const { fork } = require('child_process')
-    apiProcess = fork(apiPath, [], {
-      env: { ...process.env, MANAGR_API_PORT: String(API_PORT) },
-      cwd: path.dirname(apiPath),
-      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-    })
-  }
+  // fork() uses Electron's bundled Node.js — native modules are rebuilt
+  // for this version during electron-builder's install-app-deps step.
+  apiProcess = fork(apiPath, [], {
+    env: { ...process.env, MANAGR_API_PORT: String(API_PORT) },
+    cwd: path.dirname(apiPath),
+    stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+  })
 
   apiProcess.stdout.on('data', d => console.log(`[api] ${d.toString().trim()}`))
   apiProcess.stderr.on('data', d => console.error(`[api] ${d.toString().trim()}`))
@@ -117,7 +94,7 @@ app.whenReady().then(async () => {
     console.error('[managr] API failed:', err.message)
     if (mainWindow) {
       mainWindow.webContents.executeJavaScript(`
-        document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#DFD0B8;background:#222831;min-height:100vh"><h2>managr failed to start</h2><p style="color:#948979">The API server could not start. Error:</p><pre style="color:#a85454;background:#1a1e26;padding:12px;border-radius:6px">${err.message}</pre><p style="color:#948979">Try restarting the app or install <a href="https://nodejs.org" style="color:#948979">Node.js</a>.</p></div>'
+        document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#DFD0B8;background:#222831;min-height:100vh"><h2>managr failed to start</h2><p style="color:#948979">Error:</p><pre style="color:#a85454;background:#1a1e26;padding:12px;border-radius:6px">${err.message.replace(/'/g, "\\'")}</pre></div>'
       `)
     }
   }
