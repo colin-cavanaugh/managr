@@ -94,6 +94,7 @@ function createWindow() {
     minHeight: 540,
     title: 'managr',
     show: false,
+    icon: path.join(__dirname, '..', 'build', 'icon.png'),
     backgroundColor: '#222831',
     webPreferences: {
       nodeIntegration: false,

@@ -280,25 +280,32 @@ app.get('/api/files/analyze', async (req, res) => {
     let dirCount = 0
     const byExtension: Record<string, { count: number; size: number }> = {}
 
-    const entries = await fs.readdir(dirPath, { withFileTypes: true })
-
-    for (const entry of entries) {
-      if (entry.name.startsWith('.')) continue
-      const fullPath = path.join(dirPath, entry.name)
-      try {
-        if (entry.isDirectory()) {
-          dirCount++
-        } else if (entry.isFile()) {
-          const stat = await fs.stat(fullPath)
-          fileCount++
-          totalSize += stat.size
-          const ext = path.extname(entry.name).toLowerCase() || '(none)'
-          if (!byExtension[ext]) byExtension[ext] = { count: 0, size: 0 }
-          byExtension[ext].count++
-          byExtension[ext].size += stat.size
-        }
-      } catch { /* skip */ }
+    // Recursive scan for accurate file type breakdown
+    async function scan(dir: string, depth = 0): Promise<void> {
+      if (depth > 10) return
+      let entries
+      try { entries = await fs.readdir(dir, { withFileTypes: true }) } catch { return }
+      for (const entry of entries) {
+        if (entry.name.startsWith('.')) continue
+        const fullPath = path.join(dir, entry.name)
+        try {
+          if (entry.isDirectory()) {
+            if (depth === 0) dirCount++
+            await scan(fullPath, depth + 1)
+          } else if (entry.isFile()) {
+            const stat = await fs.stat(fullPath)
+            fileCount++
+            totalSize += stat.size
+            const ext = path.extname(entry.name).toLowerCase() || '(none)'
+            if (!byExtension[ext]) byExtension[ext] = { count: 0, size: 0 }
+            byExtension[ext].count++
+            byExtension[ext].size += stat.size
+          }
+        } catch { /* skip */ }
+      }
     }
+
+    await scan(dirPath)
 
     const breakdown = Object.entries(byExtension)
       .map(([ext, data]) => ({ extension: ext, ...data }))
