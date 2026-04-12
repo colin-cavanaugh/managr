@@ -106,18 +106,24 @@ export function ExplorerPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const lastClickedIdx = useRef<number | null>(null)
 
-  const toggleSelect = (path: string, idx: number, shiftKey: boolean) => {
+  // Ref to current visible (sorted) entries so shift-select uses the right order
+  const visibleEntries = useRef<{ path: string }[]>([])
+  visibleEntries.current = sortedEntries
+
+  const toggleSelect = (entryPath: string, idx: number, shiftKey: boolean) => {
     setSelected(prev => {
       const next = new Set(prev)
-      if (shiftKey && lastClickedIdx.current !== null && listing) {
+      if (shiftKey && lastClickedIdx.current !== null) {
         const start = Math.min(lastClickedIdx.current, idx)
         const end = Math.max(lastClickedIdx.current, idx)
         for (let i = start; i <= end; i++) {
-          next.add(listing.entries[i].path)
+          if (visibleEntries.current[i]) {
+            next.add(visibleEntries.current[i].path)
+          }
         }
       } else {
-        if (next.has(path)) next.delete(path)
-        else next.add(path)
+        if (next.has(entryPath)) next.delete(entryPath)
+        else next.add(entryPath)
       }
       lastClickedIdx.current = idx
       return next
