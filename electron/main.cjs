@@ -1,6 +1,7 @@
 const { app, BrowserWindow, shell } = require('electron')
 const path = require('path')
 const { spawn } = require('child_process')
+const fs = require('fs')
 
 let mainWindow = null
 let apiProcess = null
@@ -11,20 +12,49 @@ function findNode() {
   // In Electron, process.execPath is the Electron binary, not node.
   // Use the system node instead so native modules (better-sqlite3) work.
   const { execSync } = require('child_process')
+  const isWin = process.platform === 'win32'
   try {
-    return execSync('which node', { encoding: 'utf-8' }).trim()
+    const cmd = isWin ? 'where node' : 'which node'
+    const result = execSync(cmd, { encoding: 'utf-8' }).trim()
+    // 'where' on Windows can return multiple lines — take the first
+    return result.split(/\r?\n/)[0]
   } catch {
     return 'node' // fallback to PATH
   }
 }
 
+function getResourcePath(...segments) {
+  // In production, files are packed into app.asar.
+  // But the server needs to run outside asar as a real Node process.
+  // Electron provides app.getAppPath() which points to the asar.
+  // The unpacked files are at app.asar.unpacked or alongside the asar.
+  const appPath = app.getAppPath()
+
+  if (isDev) {
+    return path.join(__dirname, '..', ...segments)
+  }
+
+  // Try app.asar.unpacked first (for files marked as asarUnpack)
+  const unpackedPath = path.join(appPath.replace('app.asar', 'app.asar.unpacked'), ...segments)
+  if (fs.existsSync(unpackedPath)) return unpackedPath
+
+  // Fallback to regular path (outside asar)
+  return path.join(appPath, ...segments)
+}
+
 function startApiServer() {
-  const apiPath = path.join(__dirname, '..', 'server', 'dist', 'src', 'api.js')
+  const apiPath = getResourcePath('server', 'dist', 'src', 'api.js')
   const nodePath = findNode()
+
+  console.log(`[managr] Node: ${nodePath}`)
+  console.log(`[managr] API script: ${apiPath}`)
+  console.log(`[managr] Exists: ${fs.existsSync(apiPath)}`)
 
   apiProcess = spawn(nodePath, [apiPath], {
     env: { ...process.env, MANAGR_API_PORT: String(API_PORT) },
     stdio: ['ignore', 'pipe', 'pipe'],
+    // Run outside of asar
+    cwd: path.dirname(apiPath),
   })
 
   apiProcess.stdout.on('data', data => {
@@ -40,7 +70,6 @@ function startApiServer() {
   })
 
   return new Promise((resolve) => {
-    // Wait for the API to be ready
     const check = () => {
       const http = require('http')
       const req = http.get(`http://localhost:${API_PORT}/api/platform`, res => {
@@ -65,7 +94,6 @@ function createWindow() {
     minHeight: 540,
     title: 'managr',
     show: false,
-    icon: path.join(__dirname, '..', 'build', 'icon.png'),
     backgroundColor: '#222831',
     webPreferences: {
       nodeIntegration: false,
@@ -73,19 +101,16 @@ function createWindow() {
     },
   })
 
-  // Show once content is ready to avoid white flash
   mainWindow.once('ready-to-show', () => mainWindow.show())
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
   } else {
-    // Load the built React app
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html')
+    const indexPath = getResourcePath('dist', 'index.html')
     mainWindow.loadFile(indexPath)
   }
 
-  // Open external links in the default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
     return { action: 'deny' }

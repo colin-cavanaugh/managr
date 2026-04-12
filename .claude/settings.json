@@ -30,7 +30,13 @@
       "Bash(cp \"/home/colin/managr/release/managr 1.0.0.exe\" \"/mnt/c/Users/light/Desktop/managr 1.0.0.exe\")",
       "Bash(cp \"/home/colin/managr/release/managr 1.0.0.exe\" \"/mnt/c/temp/managr-1.0.0.exe\")",
       "Read(//mnt/c/temp/**)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(ls ~/.ssh/*.pub)",
+      "Bash(gh auth:*)",
+      "Bash(ssh -T git@github-personal)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "additionalDirectories": [
       "/mnt/c/Users/light/OneDrive/Desktop"
