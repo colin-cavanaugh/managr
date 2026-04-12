@@ -1,0 +1,147 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.count {
+  font-size: 14px;
+  color: var(--mgr-text-muted);
+}
+
+/* ── Rule list ──────────────────────────────────────── */
+
+.ruleList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ruleCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--mgr-bg-raised);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius-lg);
+  transition: border-color 0.15s;
+}
+
+.ruleCard:hover {
+  border-color: var(--mgr-primary);
+}
+
+.ruleInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.ruleName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mgr-text);
+  margin: 0 0 4px;
+}
+
+.ruleDesc {
+  font-size: 13px;
+  color: var(--mgr-text-muted);
+  margin: 0 0 8px;
+}
+
+.ruleMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ruleActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--mgr-text-muted);
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mgr-text);
+  margin: 0 0 8px;
+}
+
+.emptyDesc {
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+/* ── Form ──────────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formRow {
+  display: flex;
+  gap: 12px;
+}
+
+.formRow > * {
+  flex: 1;
+}
+
+.formSection {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mgr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 8px 0 0;
+}
+
+.conditionRow,
+.actionRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.conditionRow > *,
+.actionRow > * {
+  flex: 1;
+}
+
+.removeBtn {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius);
+  color: var(--mgr-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.removeBtn:hover {
+  color: var(--mgr-danger);
+  border-color: var(--mgr-danger);
+}

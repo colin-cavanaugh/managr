@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="52" viewBox="0 0 260 52" role="img">
+  <title>managr</title>
+  <desc>managr — horizontal lockup</desc>
+
+  <!-- Icon: rounded square — navy -->
+  <rect x="0" y="4" width="44" height="44" rx="10" fill="#3A5884"/>
+
+  <!-- File body — light surface -->
+  <rect x="10" y="12" width="20" height="28" rx="2.5" fill="#EDF1FA"/>
+  <!-- Dog-ear -->
+  <polygon points="22,12 30,12 30,20" fill="#3A5884"/>
+  <line x1="22" y1="12" x2="22" y2="20" stroke="#EDF1FA" stroke-width="0.75"/>
+  <line x1="22" y1="20" x2="30" y2="20" stroke="#EDF1FA" stroke-width="0.75"/>
+
+  <!-- Arrow — dark -->
+  <line x1="12" y1="34" x2="24" y2="34" stroke="#161B23" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M21 30 L26 34 L21 38" fill="none" stroke="#161B23" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Wordmark — dark -->
+  <text x="56" y="36"
+    font-family="'Roboto', system-ui, sans-serif"
+    font-weight="900"
+    font-size="26"
+    letter-spacing="0"
+    fill="#161B23">managr</text>
+</svg>

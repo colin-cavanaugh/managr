@@ -1,0 +1,46 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mgr-text);
+  font-family: var(--mgr-font-family);
+}
+
+.select {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  font-size: 14px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-text);
+  background: var(--mgr-bg-sunken);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2371717a' d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  box-sizing: border-box;
+}
+
+.select:focus {
+  border-color: var(--mgr-border-focus);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--mgr-text-muted);
+}

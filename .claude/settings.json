@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ':*)",
+      "Bash(pkill -f electron)",
+      "Bash(pkill -9 -f electron)",
+      "Bash(npx electron-builder:*)",
+      "Bash(rm -rf \"/mnt/c/Users/light/OneDrive/Desktop/managr-app\")",
+      "Bash(cp -r /home/colin/managr/release/win-unpacked \"/mnt/c/Users/light/OneDrive/Desktop/managr-app\")",
+      "Bash(ls /home/colin/managr/src/assets/*.svg)",
+      "Bash(node -e \"const {getIconForFile, getIconForFolder} = require\\('vscode-icons-js'\\); console.log\\('pdf:', getIconForFile\\('test.pdf'\\)\\); console.log\\('js:', getIconForFile\\('test.js'\\)\\); console.log\\('ts:', getIconForFile\\('test.ts'\\)\\); console.log\\('py:', getIconForFile\\('test.py'\\)\\); console.log\\('docx:', getIconForFile\\('test.docx'\\)\\); console.log\\('folder:', getIconForFolder\\('src'\\)\\); console.log\\('package.json:', getIconForFile\\('package.json'\\)\\);\")",
+      "Bash(rm css.svg csv.svg docx.svg html.svg js.svg json.svg md.svg pdf.svg py.svg sql.svg ts.svg xlsx.svg react.svg vite.svg)",
+      "Bash(ls *.svg)",
+      "Bash(wine --version)",
+      "Bash(rsvg-convert -w 512 -h 512 /home/colin/managr/src/assets/managr-icon.svg -o /home/colin/managr/build/icon.png)",
+      "Bash(convert -background none -size 512x512 /home/colin/managr/src/assets/managr-icon.svg /home/colin/managr/build/icon.png)",
+      "Bash(convert -background none -size 256x256 /home/colin/managr/src/assets/managr-icon.svg -define icon:auto-resize=256,128,64,48,32,16 /home/colin/managr/build/icon.ico)",
+      "Bash(ls -lh /home/colin/managr/release/*.exe)",
+      "Bash(wine64 --version)",
+      "Read(//usr/bin/**)",
+      "Bash(dpkg -l)",
+      "Read(//usr/**)",
+      "Bash(dpkg -L wine32)",
+      "Bash(apt-cache search:*)",
+      "Bash(apt-cache depends:*)",
+      "Bash(apt-get download:*)",
+      "Bash(dpkg --info wine64*.deb)",
+      "Bash(sudo dpkg:*)",
+      "Bash(rm wine64*.deb)",
+      "Bash(cp \"/home/colin/managr/release/managr 1.0.0.exe\" \"/mnt/c/Users/light/Desktop/managr 1.0.0.exe\")",
+      "Bash(cp \"/home/colin/managr/release/managr 1.0.0.exe\" \"/mnt/c/temp/managr-1.0.0.exe\")",
+      "Read(//mnt/c/temp/**)",
+      "Bash(git config:*)"
+    ],
+    "additionalDirectories": [
+      "/mnt/c/Users/light/OneDrive/Desktop"
+    ]
+  }
+}

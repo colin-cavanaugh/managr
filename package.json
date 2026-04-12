@@ -1,0 +1,83 @@
+{
+  "name": "managr",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Cross-platform file automation tool with rule-based organization, snapshots, and rollback",
+  "author": "Colin Cavanaugh",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -n api,vite -c blue,green \"npm run dev:api\" \"vite\"",
+    "dev:api": "cd server && node dist/src/api.js",
+    "dev:vite": "vite",
+    "dev:electron": "NODE_ENV=development concurrently -n api,vite,electron -c blue,green,magenta \"npm run dev:api\" \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "tsc -b && vite build",
+    "build:server": "cd server && npx tsc",
+    "build:all": "npm run build:server && npm run build",
+    "build:electron": "npm run build:all && electron-builder",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@nicolo-ribaudo/chokidar-2": "^2.1.8-no-fsevents.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "vscode-icons-js": "^11.6.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^24.12.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.58.0",
+    "vite": "^8.0.4",
+    "wait-on": "^9.0.5"
+  },
+  "build": {
+    "appId": "com.managr.app",
+    "productName": "managr",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "server/dist/**/*",
+      "server/node_modules/**/*",
+      "server/package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    }
+  }
+}

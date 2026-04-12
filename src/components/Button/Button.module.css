@@ -1,0 +1,97 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--mgr-font-family);
+  line-height: 1.4;
+  border: 1px solid transparent;
+  border-radius: var(--mgr-radius);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--mgr-border-focus);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Variants ─────────────────────────────────────── */
+
+.primary {
+  background: var(--mgr-primary);
+  color: var(--mgr-primary-text);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--mgr-primary-hover);
+}
+
+.secondary {
+  background: var(--mgr-secondary);
+  color: var(--mgr-secondary-text);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--mgr-secondary-hover);
+}
+
+.danger {
+  background: var(--mgr-danger);
+  color: var(--mgr-danger-text);
+}
+
+.danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.ghost {
+  background: transparent;
+  color: var(--mgr-text);
+  border-color: var(--mgr-border);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--mgr-bg-raised);
+}
+
+.outline {
+  background: transparent;
+  color: var(--mgr-primary);
+  border-color: var(--mgr-primary);
+}
+
+.outline:hover:not(:disabled) {
+  background: var(--mgr-primary);
+  color: var(--mgr-primary-text);
+}
+
+/* ── Sizes ────────────────────────────────────────── */
+
+.sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.md {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.lg {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.fullWidth {
+  width: 100%;
+}

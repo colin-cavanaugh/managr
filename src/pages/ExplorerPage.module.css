@@ -1,0 +1,583 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── Stats bar — compact ──────────────────────────── */
+
+.stats {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--mgr-bg-raised);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius);
+  flex: 1 1 0;
+  min-width: 80px;
+}
+
+.statValue {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mgr-text);
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--mgr-text-muted);
+}
+
+/* ── Main split — breakdown left, contents right ───── */
+
+.columns {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 1100px) {
+  .columns { grid-template-columns: 220px 1fr; }
+}
+
+@media (max-width: 860px) {
+  .columns { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .breakdownPanel { max-height: 200px; }
+}
+
+/* ── Breakdown — compact sidebar ───────────────────── */
+
+.breakdownPanel {
+  display: flex;
+  flex-direction: column;
+  background: var(--mgr-bg-raised);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius-lg);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.breakdownHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mgr-border);
+  flex-shrink: 0;
+}
+
+.breakdownTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mgr-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.breakdownScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breakdownRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.breakdownRow:hover {
+  background: var(--mgr-bg-sunken);
+}
+
+.breakdownExt {
+  width: 45px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mgr-text);
+  text-align: right;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.breakdownBarOuter {
+  flex: 1;
+  height: 10px;
+  background: var(--mgr-bg-sunken);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.breakdownBarInner {
+  height: 100%;
+  background: var(--mgr-primary);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  min-width: 2px;
+}
+
+.breakdownCount {
+  width: 70px;
+  color: var(--mgr-text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.breakdownRule {
+  padding: 2px 6px;
+  font-size: 10px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-primary);
+  background: transparent;
+  border: 1px solid var(--mgr-primary);
+  border-radius: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  opacity: 0;
+}
+
+.breakdownRow:hover .breakdownRule {
+  opacity: 1;
+}
+
+.breakdownRule:hover {
+  background: var(--mgr-primary);
+  color: var(--mgr-primary-text);
+}
+
+/* ── Contents — main panel ─────────────────────────── */
+
+.contentsPanel {
+  display: flex;
+  flex-direction: column;
+  background: var(--mgr-bg-raised);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius-lg);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.contentsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mgr-border);
+  flex-shrink: 0;
+}
+
+.contentsTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mgr-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sortBar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 14px;
+  border-bottom: 1px solid var(--mgr-border);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.sortBtn {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  white-space: nowrap;
+}
+
+.sortBtn:hover {
+  background: var(--mgr-bg-sunken);
+  color: var(--mgr-text);
+}
+
+.sortBtnActive {
+  color: var(--mgr-primary);
+  border-color: var(--mgr-primary);
+  background: rgba(148, 137, 121, 0.08);
+}
+
+.sortLabel {
+  font-size: 10px;
+  color: var(--mgr-text-muted);
+  margin-right: 4px;
+}
+
+.stopBtn {
+  margin-left: auto;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-danger);
+  background: transparent;
+  border: 1px solid var(--mgr-danger);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.stopBtn:hover {
+  background: var(--mgr-danger);
+  color: var(--mgr-danger-text);
+}
+
+.loadingIndicator {
+  font-size: 10px;
+  color: var(--mgr-text-muted);
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.contentsScroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── File list ─────────────────────────────────────── */
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  cursor: default;
+  transition: background 0.12s ease;
+  border-bottom: 1px solid var(--mgr-border);
+}
+
+.fileItem:last-child {
+  border-bottom: none;
+}
+
+.fileItem:hover {
+  background: var(--mgr-bg-sunken);
+}
+
+.fileItemDir {
+  cursor: pointer;
+}
+
+.fileItemDir:hover {
+  box-shadow: inset 3px 0 0 var(--mgr-primary);
+}
+
+.fileIcon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.fileIconDir {
+  background: rgba(148, 137, 121, 0.12);
+  color: var(--mgr-primary);
+}
+
+.fileIconFile {
+  background: transparent;
+}
+
+.fileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mgr-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileItemDir .fileName {
+  color: var(--mgr-primary);
+}
+
+.fileMeta {
+  font-size: 10px;
+  color: var(--mgr-text-muted);
+  margin-top: 1px;
+}
+
+.fileSize {
+  font-size: 11px;
+  color: var(--mgr-text-muted);
+  font-family: monospace;
+  min-width: 65px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── File actions (hover reveal) ───────────────────── */
+
+.fileActions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  flex-shrink: 0;
+}
+
+.fileItem:hover .fileActions {
+  opacity: 1;
+}
+
+.actionBtn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--mgr-radius);
+  color: var(--mgr-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.actionBtn:hover {
+  background: var(--mgr-bg-raised);
+  border-color: var(--mgr-border);
+  color: var(--mgr-text);
+}
+
+.actionBtnDanger:hover {
+  color: var(--mgr-danger);
+  border-color: var(--mgr-danger);
+}
+
+/* ── Breadcrumbs ───────────────────────────────────── */
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--mgr-text-muted);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.crumb {
+  background: none;
+  border: none;
+  color: var(--mgr-primary);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--mgr-font-family);
+  padding: 1px 3px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.crumb:hover {
+  background: var(--mgr-bg-sunken);
+}
+
+.separator {
+  color: var(--mgr-text-muted);
+}
+
+/* ── Quick rule form ───────────────────────────────── */
+
+.quickRuleForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quickRuleRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.quickRuleRow > * {
+  flex: 1;
+}
+
+/* ── Move form ─────────────────────────────────────── */
+
+.moveForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.moveFrom {
+  font-size: 12px;
+  color: var(--mgr-text-muted);
+  padding: 8px 12px;
+  background: var(--mgr-bg-sunken);
+  border-radius: var(--mgr-radius);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+/* ── Utility ───────────────────────────────────────── */
+
+.loading {
+  text-align: center;
+  padding: 24px;
+  color: var(--mgr-text-muted);
+  font-size: 13px;
+}
+
+.error {
+  padding: 10px 14px;
+  background: rgba(184, 92, 92, 0.1);
+  border: 1px solid var(--mgr-danger);
+  border-radius: var(--mgr-radius);
+  color: var(--mgr-danger);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* ── Checkbox ──────────────────────────────────────── */
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--mgr-border);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+  font-size: 10px;
+  color: transparent;
+  padding: 0;
+}
+
+.checkbox:hover {
+  border-color: var(--mgr-primary);
+}
+
+.checkboxChecked {
+  background: var(--mgr-primary);
+  border-color: var(--mgr-primary);
+  color: var(--mgr-primary-text);
+}
+
+/* ── Selected file row ─────────────────────────────── */
+
+.fileItemSelected {
+  background: rgba(148, 137, 121, 0.1);
+}
+
+.fileItemSelected:hover {
+  background: rgba(148, 137, 121, 0.15);
+}
+
+/* ── Bulk action bar ───────────────────────────────── */
+
+.bulkBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--mgr-bg-sunken);
+  border-bottom: 1px solid var(--mgr-border);
+  flex-shrink: 0;
+}
+
+.bulkCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mgr-text);
+  margin-right: auto;
+}
+
+.bulkBtn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--mgr-font-family);
+  font-weight: 500;
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  background: transparent;
+  color: var(--mgr-text);
+}
+
+.bulkBtn:hover {
+  background: var(--mgr-bg-raised);
+  border-color: var(--mgr-text-muted);
+}
+
+.bulkBtnDanger {
+  color: var(--mgr-danger);
+  border-color: var(--mgr-danger);
+}
+
+.bulkBtnDanger:hover {
+  background: var(--mgr-danger);
+  color: var(--mgr-danger-text);
+}
+
+.selectAll {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--mgr-primary);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--mgr-font-family);
+}
+
+.selectAll:hover {
+  text-decoration: underline;
+}

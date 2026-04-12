@@ -1,0 +1,56 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--mgr-font-family);
+  line-height: 1.4;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.primary {
+  background: var(--mgr-primary);
+  color: var(--mgr-primary-text);
+}
+
+.secondary {
+  background: var(--mgr-secondary);
+  color: var(--mgr-secondary-text);
+}
+
+.success {
+  background: var(--mgr-success);
+  color: var(--mgr-success-text);
+}
+
+.warning {
+  background: var(--mgr-warning);
+  color: var(--mgr-warning-text);
+}
+
+.danger {
+  background: var(--mgr-danger);
+  color: var(--mgr-danger-text);
+}
+
+.info {
+  background: var(--mgr-info);
+  color: var(--mgr-info-text);
+}
+
+.ghost {
+  background: var(--mgr-bg-sunken);
+  color: var(--mgr-text-muted);
+}
+
+/* ── Dot indicator ──────────────────────────────────── */
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}

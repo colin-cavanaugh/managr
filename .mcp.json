@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "file-manager": {
+      "command": "node",
+      "args": ["/home/colin/managr/server/dist/index.js"]
+    }
+  }
+}
