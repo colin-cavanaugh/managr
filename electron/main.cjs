@@ -43,6 +43,10 @@ function startApiServer() {
     console.error(`[api] ${data.toString().trim()}`)
   })
 
+  apiProcess.on('error', err => {
+    console.error(`[api] Fork error: ${err.message}`)
+  })
+
   apiProcess.on('exit', code => {
     console.log(`[api] Process exited with code ${code}`)
   })
@@ -98,10 +102,25 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  console.log('[managr] Starting API server...')
-  await startApiServer()
-  console.log('[managr] API server ready, opening window...')
+  // Show window immediately — don't block on API
   createWindow()
+
+  console.log('[managr] Starting API server...')
+  try {
+    await Promise.race([
+      startApiServer(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('API startup timed out after 15s')), 15000))
+    ])
+    console.log('[managr] API server ready')
+  } catch (err) {
+    console.error('[managr] API failed to start:', err.message)
+    // Show error in the window
+    if (mainWindow) {
+      mainWindow.webContents.executeJavaScript(`
+        document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#DFD0B8;background:#222831;min-height:100vh"><h2>managr failed to start</h2><p style="color:#948979">The API server could not start. Error:</p><pre style="color:#a85454;background:#1a1e26;padding:12px;border-radius:6px">${err.message}</pre><p style="color:#948979">Try restarting the app.</p></div>'
+      `)
+    }
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
