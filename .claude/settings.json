@@ -36,7 +36,8 @@
       "Bash(ssh -T git@github-personal)",
       "Bash(ssh -T git@github.com)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "additionalDirectories": [
       "/mnt/c/Users/light/OneDrive/Desktop"

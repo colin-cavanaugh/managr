@@ -424,29 +424,24 @@ app.post('/api/files/delete', async (req, res) => {
 // ─── Open file / location ───────────────────────────────────────────────────
 
 function shellOpen(target: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const platform = os.platform()
-    let cmd: string
 
     // Convert WSL path to Windows path for explorer
     const toWinPath = (p: string) => p.startsWith('/mnt/') ? p.replace(/^\/mnt\/([a-z])/, '$1:').replace(/\//g, '\\') : p
 
-    if (process.env.WSL_DISTRO_NAME || require('fs').existsSync('/proc/version')) {
-      // WSL — use explorer.exe or wslview
+    if (platform === 'win32') {
+      // Native Windows — use explorer.exe directly (works for both files and folders)
+      exec(`explorer "${target}"`, () => resolve())
+    } else if (process.env.WSL_DISTRO_NAME || require('fs').existsSync('/proc/version')) {
+      // WSL — convert path and use explorer.exe
       const winPath = toWinPath(target)
-      cmd = `explorer.exe "${winPath}"`
+      exec(`explorer.exe "${winPath}"`, () => resolve())
     } else if (platform === 'darwin') {
-      cmd = `open "${target}"`
-    } else if (platform === 'win32') {
-      cmd = `start "" "${target}"`
+      exec(`open "${target}"`, () => resolve())
     } else {
-      cmd = `xdg-open "${target}"`
+      exec(`xdg-open "${target}"`, () => resolve())
     }
-
-    exec(cmd, err => {
-      // explorer.exe on WSL returns exit code 1 even on success
-      resolve()
-    })
   })
 }
 
@@ -466,9 +461,16 @@ app.post('/api/files/open-location', async (req, res) => {
   const { filePath } = req.body as { filePath: string }
   if (!filePath) return res.status(400).json({ error: 'filePath is required' })
   try {
-    const dir = (await fs.stat(filePath)).isDirectory() ? filePath : path.dirname(filePath)
-    await shellOpen(dir)
-    res.json({ status: 'opened', path: dir })
+    const isDir = (await fs.stat(filePath)).isDirectory()
+    if (os.platform() === 'win32' && !isDir) {
+      // On Windows, highlight the file in Explorer
+      exec(`explorer /select,"${filePath}"`, () => {})
+      res.json({ status: 'opened', path: filePath })
+    } else {
+      const dir = isDir ? filePath : path.dirname(filePath)
+      await shellOpen(dir)
+      res.json({ status: 'opened', path: dir })
+    }
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
   }
