@@ -257,19 +257,21 @@ interface FileEntry {
 }
 
 /** Recursively calculate total size of a directory. */
-async function dirSize(dirPath: string, maxDepth = 10, depth = 0): Promise<number> {
+async function dirSize(dirPath: string, maxDepth = 10, depth = 0, skipped?: string[]): Promise<number> {
   if (depth > maxDepth) return 0
+  if (skipped?.some(s => dirPath === s || dirPath.startsWith(s + path.sep) || dirPath.startsWith(s + '/'))) return 0
   let total = 0
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true })
     for (const entry of entries) {
       const fullPath = path.join(dirPath, entry.name)
+      if (skipped?.some(s => fullPath === s || fullPath.startsWith(s + path.sep) || fullPath.startsWith(s + '/'))) continue
       try {
         if (entry.isFile()) {
           const stat = await fs.stat(fullPath)
           total += stat.size
         } else if (entry.isDirectory()) {
-          total += await dirSize(fullPath, maxDepth, depth + 1)
+          total += await dirSize(fullPath, maxDepth, depth + 1, skipped)
         }
       } catch {
         // skip inaccessible
@@ -326,7 +328,8 @@ app.get('/api/files/size', async (req, res) => {
   const dirPath = req.query.path as string
   if (!dirPath) return res.status(400).json({ error: 'path is required' })
   try {
-    const size = await dirSize(dirPath)
+    const skipped = db.getSkippedDirs()
+    const size = await dirSize(dirPath, 10, 0, skipped)
     res.json({ path: dirPath, size })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
@@ -339,27 +342,42 @@ app.get('/api/files/analyze', async (req, res) => {
   if (!dirPath) return res.status(400).json({ error: 'path is required' })
 
   try {
+    const skippedDirs = db.getSkippedDirs()
+    const isSkipped = (p: string) => skippedDirs.some(s => p === s || p.startsWith(s + path.sep) || p.startsWith(s + '/'))
+
     let totalSize = 0
     let fileCount = 0
     let dirCount = 0
     const byExtension: Record<string, { count: number; size: number }> = {}
+    // Track per-folder sizes during deep scan
+    const folderSizes: Record<string, number> = {}
 
-    async function scan(dir: string, depth = 0): Promise<void> {
-      if (!deep && depth > 0) return
-      if (depth > 10) return
+    async function scan(dir: string, depth = 0): Promise<number> {
+      if (!deep && depth > 0) return 0
+      if (depth > 10) return 0
+      if (isSkipped(dir)) return 0
+
+      let dirTotal = 0
       let entries
-      try { entries = await fs.readdir(dir, { withFileTypes: true }) } catch { return }
+      try { entries = await fs.readdir(dir, { withFileTypes: true }) } catch { return 0 }
+
       for (const entry of entries) {
         if (entry.name.startsWith('.')) continue
         const fullPath = path.join(dir, entry.name)
+        if (isSkipped(fullPath)) continue
         try {
           if (entry.isDirectory()) {
             if (depth === 0) dirCount++
-            if (deep) await scan(fullPath, depth + 1)
+            if (deep) {
+              const subSize = await scan(fullPath, depth + 1)
+              dirTotal += subSize
+              if (depth === 0) folderSizes[fullPath] = subSize
+            }
           } else if (entry.isFile()) {
             const stat = await fs.stat(fullPath)
             fileCount++
             totalSize += stat.size
+            dirTotal += stat.size
             const ext = path.extname(entry.name).toLowerCase() || '(none)'
             if (!byExtension[ext]) byExtension[ext] = { count: 0, size: 0 }
             byExtension[ext].count++
@@ -367,6 +385,7 @@ app.get('/api/files/analyze', async (req, res) => {
           }
         } catch { /* skip */ }
       }
+      return dirTotal
     }
 
     await scan(dirPath)
@@ -375,7 +394,10 @@ app.get('/api/files/analyze', async (req, res) => {
       .map(([ext, data]) => ({ extension: ext, ...data }))
       .sort((a, b) => b.size - a.size)
 
-    res.json({ path: dirPath, deep, fileCount, dirCount, totalSize, breakdown })
+    res.json({
+      path: dirPath, deep, fileCount, dirCount, totalSize, breakdown,
+      ...(deep ? { folderSizes } : {}),
+    })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
   }
@@ -438,6 +460,26 @@ app.delete('/api/dirs/pin', (req, res) => {
   if (!dirPath) return res.status(400).json({ error: 'path is required' })
   db.unpinDir(dirPath)
   res.json({ status: 'unpinned' })
+})
+
+// ─── Skip List ──────────────────────────────────────────────────────────────
+
+app.get('/api/dirs/skipped', (_req, res) => {
+  res.json(db.getSkippedDirs())
+})
+
+app.post('/api/dirs/skip', (req, res) => {
+  const { path: dirPath } = req.body as { path: string }
+  if (!dirPath) return res.status(400).json({ error: 'path is required' })
+  db.skipDir(dirPath)
+  res.json({ status: 'skipped', path: dirPath })
+})
+
+app.delete('/api/dirs/skip', (req, res) => {
+  const { path: dirPath } = req.body as { path: string }
+  if (!dirPath) return res.status(400).json({ error: 'path is required' })
+  db.unskipDir(dirPath)
+  res.json({ status: 'unskipped', path: dirPath })
 })
 
 // ─── Search ─────────────────────────────────────────────────────────────────

@@ -79,6 +79,11 @@ const SCHEMA = `
     created_at TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS skipped_dirs (
+    path       TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON activity_log(timestamp);
   CREATE INDEX IF NOT EXISTS idx_activity_rule ON activity_log(rule_id);
   CREATE INDEX IF NOT EXISTS idx_snapshots_batch ON snapshots(batch_id);
@@ -313,6 +318,27 @@ export class ManagrDB {
   getPinnedDirs(): { id: string; path: string; label: string }[] {
     const rows = this.db.prepare('SELECT id, path, label FROM pinned_dirs ORDER BY sort_order').all() as { id: string; path: string; label: string }[]
     return rows
+  }
+
+  // ── Skipped Dirs ──────────────────────────────────────────────────────
+
+  skipDir(dirPath: string): void {
+    const now = new Date().toISOString()
+    this.db.prepare('INSERT OR IGNORE INTO skipped_dirs (path, created_at) VALUES (?, ?)').run(dirPath, now)
+  }
+
+  unskipDir(dirPath: string): boolean {
+    return this.db.prepare('DELETE FROM skipped_dirs WHERE path = ?').run(dirPath).changes > 0
+  }
+
+  getSkippedDirs(): string[] {
+    const rows = this.db.prepare('SELECT path FROM skipped_dirs ORDER BY path').all() as { path: string }[]
+    return rows.map(r => r.path)
+  }
+
+  isSkipped(dirPath: string): boolean {
+    const skipped = this.getSkippedDirs()
+    return skipped.some(s => dirPath === s || dirPath.startsWith(s + path.sep) || dirPath.startsWith(s + '/'))
   }
 }
 

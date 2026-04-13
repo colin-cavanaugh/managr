@@ -100,6 +100,7 @@ export interface DirectoryAnalysis {
   dirCount: number
   totalSize: number
   breakdown: { extension: string; count: number; size: number }[]
+  folderSizes?: Record<string, number>
 }
 
 // ─── Rules ──────────────────────────────────────────────────────────────────
@@ -178,6 +179,15 @@ export const api = {
 
     unpin: (dirPath: string) =>
       request<{ status: string }>('/dirs/pin', { method: 'DELETE', body: JSON.stringify({ path: dirPath }) }),
+
+    skipped: () =>
+      request<string[]>('/dirs/skipped'),
+
+    skip: (dirPath: string) =>
+      request<{ status: string }>('/dirs/skip', { method: 'POST', body: JSON.stringify({ path: dirPath }) }),
+
+    unskip: (dirPath: string) =>
+      request<{ status: string }>('/dirs/skip', { method: 'DELETE', body: JSON.stringify({ path: dirPath }) }),
   },
 
   files: {

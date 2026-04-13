@@ -352,6 +352,13 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
       if (controller.signal.aborted) return
       setAnalysis(result)
       setDeepScan(true)
+      // Populate folder sizes from deep scan results
+      if (result.folderSizes) {
+        setDirSizes(prev => ({ ...prev, ...result.folderSizes }))
+        setSizesLoading(false)
+        setSizesPaused(false)
+        sizeAbort.current?.abort()
+      }
     } catch (err) {
       if (!controller.signal.aborted) {
         setError(err instanceof Error ? err.message : String(err))
@@ -359,6 +366,12 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     } finally {
       setDeepScanning(false)
     }
+  }
+
+  const handleSkipDir = async (dirPath: string) => {
+    await api.dirs.skip(dirPath)
+    // Update the size display to show "skipped"
+    setDirSizes(prev => { const next = { ...prev }; delete next[dirPath]; return next })
   }
 
   const stopDeepScan = () => {
@@ -677,6 +690,9 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                         <div className={styles.fileActions} onClick={e => e.stopPropagation()}>
                           <button className={styles.actionBtn} title="Open" onClick={() => handleOpen(entry.path)}>⧉</button>
                           <button className={styles.actionBtn} title="Show in folder" onClick={() => handleOpenLocation(entry.path)}>📂</button>
+                          {isDir && (
+                            <button className={styles.actionBtn} title="Skip in scans" onClick={() => handleSkipDir(entry.path)}>⊘</button>
+                          )}
                           <button className={styles.actionBtn} title="Move" onClick={() => { setMoveTarget(entry.path); setMoveDest('') }}>↗</button>
                           <button className={styles.actionBtn} title="Rename" onClick={() => { setRenameTarget(entry.path); setRenameValue(entry.name) }}>✎</button>
                           <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} title="Delete" onClick={() => setDeleteTarget(entry.path)}>×</button>
