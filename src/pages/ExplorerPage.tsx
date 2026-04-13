@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type DirectoryAnalysis, type DirectoryListing } from '../api/client'
-import { Badge, Button, DirectoryPicker, FileIcon, Input, Loader, Modal, Select } from '../components'
+import { Badge, Button, DirectoryPicker, DriveIcon, FileIcon, Input, Loader, Modal, Select } from '../components'
 import styles from './ExplorerPage.module.css'
 
 function humanSize(bytes: number): string {
@@ -471,7 +471,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                 onClick={() => loadDirectory(d.path)}
                 title={d.path}
               >
-                {d.type === 'drive' ? '💾' : d.type === 'home' ? '🏠' : '📂'}
+                <DriveIcon driveType={d.type as 'drive' | 'mount' | 'home'} label={d.label} size={16} />
                 {d.label}
               </button>
             )

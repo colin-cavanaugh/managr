@@ -56,3 +56,42 @@ export function FileIcon({ name, isDirectory, isOpen = false, size = 22, classNa
     </span>
   )
 }
+
+// ─── Drive icon ─────────────────────────────────────────────────────────────
+
+interface DriveIconProps {
+  driveType: 'drive' | 'mount' | 'home'
+  label: string
+  size?: number
+  className?: string
+}
+
+export function DriveIcon({ driveType, label, size = 18, className = '' }: DriveIconProps) {
+  const lowerLabel = label.toLowerCase()
+
+  let iconName: string
+  if (lowerLabel.includes('ubuntu') || lowerLabel.includes('linux') || driveType === 'mount') {
+    iconName = 'folder_type_linux.svg'
+  } else if (driveType === 'home') {
+    iconName = 'folder_type_windows.svg'
+  } else {
+    iconName = 'folder_type_dist.svg'
+  }
+
+  const src = iconMap[iconName]
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={label}
+        width={size}
+        height={size}
+        className={className}
+        style={{ objectFit: 'contain', flexShrink: 0 }}
+      />
+    )
+  }
+
+  return <span style={{ fontSize: size * 0.7 }}>{driveType === 'drive' ? '💾' : driveType === 'mount' ? '🐧' : '🏠'}</span>
+}
