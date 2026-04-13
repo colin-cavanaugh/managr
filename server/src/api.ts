@@ -34,36 +34,38 @@ interface PlatformInfo {
 }
 
 async function detectPlatform(): Promise<PlatformInfo> {
-  const linuxHome = os.homedir()
+  const home = os.homedir()
   const platform = os.platform()
 
-  // Detect WSL
+  // Check native platform first — win32 means native Windows, not WSL
+  if (platform === 'win32') {
+    return { os: 'windows', linuxHome: home, windowsHome: home, defaultHome: home }
+  }
+
+  if (platform === 'darwin') {
+    return { os: 'mac', linuxHome: home, windowsHome: null, defaultHome: home }
+  }
+
+  // On Linux, check if we're inside WSL
   try {
     const version = await fs.readFile('/proc/version', 'utf-8')
     if (version.toLowerCase().includes('microsoft')) {
-      // Find the Windows user directory
       const usersDir = '/mnt/c/Users'
       try {
         const users = await fs.readdir(usersDir)
         const skip = new Set(['All Users', 'Default', 'Default User', 'Public', 'desktop.ini'])
         const winUser = users.find(u => !skip.has(u))
         const windowsHome = winUser ? path.join(usersDir, winUser) : null
-        return { os: 'wsl', linuxHome, windowsHome, defaultHome: windowsHome || linuxHome }
+        return { os: 'wsl', linuxHome: home, windowsHome, defaultHome: windowsHome || home }
       } catch {
-        return { os: 'wsl', linuxHome, windowsHome: null, defaultHome: linuxHome }
+        return { os: 'wsl', linuxHome: home, windowsHome: null, defaultHome: home }
       }
     }
   } catch {
     // Not WSL
   }
 
-  if (platform === 'darwin') {
-    return { os: 'mac', linuxHome, windowsHome: null, defaultHome: linuxHome }
-  }
-  if (platform === 'win32') {
-    return { os: 'windows', linuxHome, windowsHome: linuxHome, defaultHome: linuxHome }
-  }
-  return { os: 'linux', linuxHome, windowsHome: null, defaultHome: linuxHome }
+  return { os: 'linux', linuxHome: home, windowsHome: null, defaultHome: home }
 }
 
 let platformCache: PlatformInfo | null = null
