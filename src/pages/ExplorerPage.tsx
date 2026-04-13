@@ -86,6 +86,17 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     })()
   }, [listing, dirSizes])
 
+  // Detect if path is a drive root where auto-scan would be too expensive
+  function isDriveRoot(p: string): boolean {
+    // Windows: C:\, D:\
+    if (/^[A-Z]:\\?$/i.test(p)) return true
+    // WSL: /mnt/c, /mnt/d
+    if (/^\/mnt\/[a-z]\/?$/.test(p)) return true
+    // Unix root
+    if (p === '/') return true
+    return false
+  }
+
   useEffect(() => {
     if (!listing) return
     sizeAbort.current?.abort()
@@ -95,6 +106,14 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     setSizesPaused(false)
     const dirs = listing.entries.filter(e => e.type === 'directory')
     if (dirs.length === 0) return
+
+    // Don't auto-scan at drive roots — require manual start
+    if (isDriveRoot(currentPath)) {
+      setSizesPaused(true)
+      setSizesLoading(false)
+      return
+    }
+
     setSizesLoading(true)
     ;(async () => {
       for (const dir of dirs) {
@@ -582,7 +601,9 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                 )}
                 {sizesPaused && (
                   <button className={styles.sortBtnActive + ' ' + styles.sortBtn} onClick={resumeSizeLoading} style={{ borderColor: 'var(--mgr-primary)', color: 'var(--mgr-primary)' }}>
-                    Resume ({Object.keys(dirSizes).length}/{listing?.entries.filter(e => e.type === 'directory').length ?? 0})
+                    {Object.keys(dirSizes).length === 0
+                      ? 'Calculate Volume'
+                      : `Resume (${Object.keys(dirSizes).length}/${listing?.entries.filter(e => e.type === 'directory').length ?? 0})`}
                   </button>
                 )}
                 {!sizesLoading && !sizesPaused && Object.keys(dirSizes).length > 0 && (
