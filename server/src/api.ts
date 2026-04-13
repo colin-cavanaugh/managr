@@ -11,7 +11,7 @@ import * as fs from 'fs/promises'
 import * as crypto from 'crypto'
 import * as path from 'path'
 import * as os from 'os'
-import { exec } from 'child_process'
+import { exec, execSync } from 'child_process'
 import { ManagrDB } from './database.js'
 import { RulesEngine } from './engine.js'
 import type { RuleCondition, RuleAction, TriggerType, ActionType } from './types.js'
@@ -102,7 +102,6 @@ app.get('/api/drives', async (_req, res) => {
     }
     // Check for WSL distros using the wsl command, then map to UNC paths
     try {
-      const { execSync } = require('child_process')
       const wslOutput = execSync('wsl -l -q', { encoding: 'utf-8', windowsHide: true })
       // wsl -l -q output may have UTF-16 null bytes — clean them
       const distros = wslOutput.replace(/\0/g, '').split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean)
