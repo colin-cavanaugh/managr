@@ -264,6 +264,18 @@
   gap: 4px;
 }
 
+.diskSpaceDone {
+  margin-left: auto;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-family: var(--mgr-font-family);
+  font-weight: 500;
+  color: var(--mgr-success);
+  border: 1px solid var(--mgr-success);
+  border-radius: 3px;
+  background: rgba(106, 138, 94, 0.1);
+}
+
 .contentsScroll {
   flex: 1;
   overflow-y: auto;

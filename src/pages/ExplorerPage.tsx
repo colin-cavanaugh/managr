@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Button, Select, Badge, Modal, Input, DirectoryPicker, FileIcon, Loader } from '../components'
-import { api, type DirectoryListing, type DirectoryAnalysis } from '../api/client'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { api, type DirectoryAnalysis, type DirectoryListing } from '../api/client'
+import { Badge, Button, DirectoryPicker, FileIcon, Input, Loader, Modal, Select } from '../components'
 import styles from './ExplorerPage.module.css'
 
 function humanSize(bytes: number): string {
@@ -533,17 +533,17 @@ export function ExplorerPage() {
                 ))}
                 {sizesLoading && (
                   <button className={styles.stopBtn} onClick={pauseSizeLoading}>
-                    Pause sizes
+                    Pause Disk Space
                   </button>
                 )}
                 {sizesPaused && (
                   <button className={styles.sortBtnActive + ' ' + styles.sortBtn} onClick={resumeSizeLoading} style={{ borderColor: 'var(--mgr-primary)', color: 'var(--mgr-primary)' }}>
-                    Resume sizes ({Object.keys(dirSizes).length}/{listing?.entries.filter(e => e.type === 'directory').length ?? 0})
+                    Resume ({Object.keys(dirSizes).length}/{listing?.entries.filter(e => e.type === 'directory').length ?? 0})
                   </button>
                 )}
                 {!sizesLoading && !sizesPaused && Object.keys(dirSizes).length > 0 && (
-                  <span className={styles.loadingIndicator}>
-                    {Object.keys(dirSizes).length} sizes loaded
+                  <span className={styles.diskSpaceDone}>
+                    ✓ Disk Space
                   </span>
                 )}
               </div>
