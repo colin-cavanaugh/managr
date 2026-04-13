@@ -600,7 +600,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                   </button>
                 )}
                 {sizesPaused && (
-                  <button className={styles.sortBtnActive + ' ' + styles.sortBtn} onClick={resumeSizeLoading} style={{ borderColor: 'var(--mgr-primary)', color: 'var(--mgr-primary)' }}>
+                  <button className={styles.sortBtnActive + ' ' + styles.sortBtn} onClick={resumeSizeLoading} style={{ marginLeft: 'auto', borderColor: 'var(--mgr-primary)', color: 'var(--mgr-primary)' }}>
                     {Object.keys(dirSizes).length === 0
                       ? 'Calculate Volume'
                       : `Resume (${Object.keys(dirSizes).length}/${listing?.entries.filter(e => e.type === 'directory').length ?? 0})`}
