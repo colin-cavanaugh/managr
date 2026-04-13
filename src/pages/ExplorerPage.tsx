@@ -552,7 +552,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                 ))}
                 {sizesLoading && (
                   <button className={styles.stopBtn} onClick={pauseSizeLoading}>
-                    Pause Disk Space
+                    Pause Volume
                   </button>
                 )}
                 {sizesPaused && (
@@ -562,7 +562,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                 )}
                 {!sizesLoading && !sizesPaused && Object.keys(dirSizes).length > 0 && (
                   <span className={styles.diskSpaceDone}>
-                    ✓ Disk Space
+                    ✓ Volume
                   </span>
                 )}
               </div>
