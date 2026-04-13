@@ -88,27 +88,34 @@ app.get('/api/drives', async (_req, res) => {
       const letter = String.fromCharCode(code)
       const drivePath = `${letter}:\\`
       try {
-        // Use readdir instead of access — more reliable for removable/network drives
         await fs.readdir(drivePath)
         drives.push({ label: `${letter}:`, path: drivePath, type: 'drive' })
-      } catch { /* not available */ }
+      } catch {
+        // readdir can fail on empty/slow drives — try stat as fallback
+        try {
+          await fs.stat(drivePath)
+          drives.push({ label: `${letter}:`, path: drivePath, type: 'drive' })
+        } catch { /* truly not available */ }
+      }
     }
     // Check for WSL filesystems accessible from Windows
-    try {
-      const wslDistros = await fs.readdir('\\\\wsl$')
-      for (const distro of wslDistros) {
-        const wslPath = `\\\\wsl$\\${distro}`
-        drives.push({ label: `🐧 ${distro}`, path: wslPath, type: 'mount' })
-      }
-    } catch {
-      // Try the newer wsl.localhost path
+    // Try multiple UNC path formats — Windows version determines which works
+    const wslPaths = ['//wsl.localhost', '//wsl$', String.raw`\\wsl.localhost`, String.raw`\\wsl$`]
+    let wslFound = false
+    for (const wslRoot of wslPaths) {
+      if (wslFound) break
       try {
-        const wslDistros = await fs.readdir('\\\\wsl.localhost')
-        for (const distro of wslDistros) {
-          const wslPath = `\\\\wsl.localhost\\${distro}`
-          drives.push({ label: `🐧 ${distro}`, path: wslPath, type: 'mount' })
+        const distros = await fs.readdir(wslRoot)
+        for (const distro of distros) {
+          if (distro.startsWith('.')) continue
+          const distroPath = path.join(wslRoot, distro)
+          try {
+            await fs.readdir(distroPath)
+            drives.push({ label: distro, path: distroPath, type: 'mount' })
+            wslFound = true
+          } catch { /* skip inaccessible */ }
         }
-      } catch { /* no WSL */ }
+      } catch { /* this path format doesn't work, try next */ }
     }
   } else if (platform.os === 'wsl') {
     // WSL — list mounted Windows drives + Linux home
