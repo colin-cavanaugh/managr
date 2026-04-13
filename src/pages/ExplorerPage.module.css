@@ -466,7 +466,7 @@
   font-size: 11px;
   color: var(--mgr-text-muted);
   font-family: monospace;
-  width: 80px;
+  width: 85px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -479,7 +479,7 @@
   opacity: 0;
   transition: opacity 0.12s;
   flex-shrink: 0;
-  width: 140px;
+  min-width: 160px;
   justify-content: flex-end;
 }
 

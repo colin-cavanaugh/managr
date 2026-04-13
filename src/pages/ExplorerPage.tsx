@@ -705,7 +705,9 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
 
                         <span className={styles.fileSize}>
                           {isDir
-                            ? (skippedDirs.has(entry.path) ? 'skipped' : dirSizes[entry.path] !== undefined ? humanSize(dirSizes[entry.path]) : '...')
+                            ? (skippedDirs.has(entry.path)
+                              ? <span style={{ color: 'var(--mgr-danger)', fontSize: 10 }}>skipped</span>
+                              : dirSizes[entry.path] !== undefined ? humanSize(dirSizes[entry.path]) : '...')
                             : humanSize(entry.size)}
                         </span>
 
