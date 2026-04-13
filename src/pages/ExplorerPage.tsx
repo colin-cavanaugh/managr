@@ -368,10 +368,22 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     }
   }
 
+  const [skippedDirs, setSkippedDirs] = useState<Set<string>>(new Set())
+
+  // Load skip list on mount
+  useEffect(() => {
+    api.dirs.skipped().then(list => setSkippedDirs(new Set(list))).catch(() => {})
+  }, [])
+
   const handleSkipDir = async (dirPath: string) => {
     await api.dirs.skip(dirPath)
-    // Update the size display to show "skipped"
+    setSkippedDirs(prev => new Set([...prev, dirPath]))
     setDirSizes(prev => { const next = { ...prev }; delete next[dirPath]; return next })
+  }
+
+  const handleUnskipDir = async (dirPath: string) => {
+    await api.dirs.unskip(dirPath)
+    setSkippedDirs(prev => { const next = new Set(prev); next.delete(dirPath); return next })
   }
 
   const stopDeepScan = () => {
@@ -607,19 +619,24 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                     {label} {sortField === field ? (sortAsc ? '↑' : '↓') : ''}
                   </button>
                 ))}
-                {sizesLoading && (
+                {sizesLoading && !deepScanning && (
                   <button className={styles.stopBtn} onClick={pauseSizeLoading}>
                     Pause Volume
                   </button>
                 )}
-                {sizesPaused && (
+                {deepScanning && (
+                  <button className={styles.stopBtn} onClick={stopDeepScan}>
+                    Stop Deep Scan
+                  </button>
+                )}
+                {sizesPaused && !deepScanning && (
                   <button className={styles.sortBtnActive + ' ' + styles.sortBtn} onClick={resumeSizeLoading} style={{ marginLeft: 'auto', borderColor: 'var(--mgr-primary)', color: 'var(--mgr-primary)' }}>
                     {Object.keys(dirSizes).length === 0
                       ? 'Calculate Volume'
                       : `Resume (${Object.keys(dirSizes).length}/${listing?.entries.filter(e => e.type === 'directory').length ?? 0})`}
                   </button>
                 )}
-                {!sizesLoading && !sizesPaused && Object.keys(dirSizes).length > 0 && (
+                {!sizesLoading && !sizesPaused && !deepScanning && Object.keys(dirSizes).length > 0 && (
                   <span className={styles.diskSpaceDone}>
                     ✓ Volume
                   </span>
@@ -683,7 +700,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
 
                         <span className={styles.fileSize}>
                           {isDir
-                            ? (dirSizes[entry.path] !== undefined ? humanSize(dirSizes[entry.path]) : '...')
+                            ? (skippedDirs.has(entry.path) ? 'skipped' : dirSizes[entry.path] !== undefined ? humanSize(dirSizes[entry.path]) : '...')
                             : humanSize(entry.size)}
                         </span>
 
@@ -691,7 +708,9 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                           <button className={styles.actionBtn} title="Open" onClick={() => handleOpen(entry.path)}>⧉</button>
                           <button className={styles.actionBtn} title="Show in folder" onClick={() => handleOpenLocation(entry.path)}>📂</button>
                           {isDir && (
-                            <button className={styles.actionBtn} title="Skip in scans" onClick={() => handleSkipDir(entry.path)}>⊘</button>
+                            skippedDirs.has(entry.path)
+                              ? <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} title="Unskip — include in scans" onClick={() => handleUnskipDir(entry.path)} style={{ opacity: 1 }}>⊘</button>
+                              : <button className={styles.actionBtn} title="Skip in scans" onClick={() => handleSkipDir(entry.path)}>⊘</button>
                           )}
                           <button className={styles.actionBtn} title="Move" onClick={() => { setMoveTarget(entry.path); setMoveDest('') }}>↗</button>
                           <button className={styles.actionBtn} title="Rename" onClick={() => { setRenameTarget(entry.path); setRenameValue(entry.name) }}>✎</button>
