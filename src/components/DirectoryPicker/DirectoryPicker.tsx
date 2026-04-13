@@ -61,16 +61,17 @@ export function DirectoryPicker({ value, onChange, placeholder = 'Choose a direc
   const [error, setError] = useState<string | null>(null)
   const [platform, setPlatform] = useState<PlatformInfo | null>(null)
   const [quickPaths, setQuickPaths] = useState<QuickPath[]>([])
+  const [drives, setDrives] = useState<{ label: string; path: string; type: string }[]>([])
 
-  // Fetch platform info once
+  // Fetch platform info and drives once
   useEffect(() => {
     api.platform().then(info => {
       setPlatform(info)
       setQuickPaths(buildQuickPaths(info))
     }).catch(() => {
-      // Fallback
       setQuickPaths([{ label: 'Home', path: '' }])
     })
+    api.drives().then(setDrives).catch(() => {})
   }, [])
 
   const loadDir = async (dirPath: string) => {
@@ -135,6 +136,21 @@ export function DirectoryPicker({ value, onChange, placeholder = 'Choose a direc
           {platform && platform.os === 'wsl' && (
             <div className={styles.platformNote}>
               WSL detected — showing Windows & Linux directories
+            </div>
+          )}
+
+          {/* Drives */}
+          {drives.length > 0 && (
+            <div className={styles.quickNav}>
+              {drives.map(d => (
+                <button
+                  key={d.path}
+                  className={styles.quickNavBtn}
+                  onClick={() => loadDir(d.path)}
+                >
+                  {d.type === 'drive' ? '💾' : d.type === 'home' ? '🏠' : '📂'} {d.label}
+                </button>
+              ))}
             </div>
           )}
 

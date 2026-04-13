@@ -6,6 +6,41 @@
   min-height: 0;
 }
 
+/* ── Drives bar ────────────────────────────────────── */
+
+.drivesBar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.driveBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-text-muted);
+  background: var(--mgr-bg-raised);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+.driveBtn:hover {
+  color: var(--mgr-text);
+  border-color: var(--mgr-primary);
+}
+
+.driveBtnActive {
+  color: var(--mgr-primary);
+  border-color: var(--mgr-primary);
+  background: rgba(148, 137, 121, 0.08);
+}
+
 /* ── Stats bar — compact ──────────────────────────── */
 
 .stats {

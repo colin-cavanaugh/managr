@@ -43,6 +43,11 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
   const [error, setError] = useState<string | null>(null)
   const [deepScan, setDeepScan] = useState(false)
   const [deepScanning, setDeepScanning] = useState(false)
+  const [drives, setDrives] = useState<{ label: string; path: string; type: string }[]>([])
+
+  useEffect(() => {
+    api.drives().then(setDrives).catch(() => {})
+  }, [])
 
   // Cache: path → { listing, analysis, dirSizes }
   const cache = useRef<Record<string, { listing: DirectoryListing; analysis: DirectoryAnalysis; dirSizes: Record<string, number> }>>({})
@@ -435,6 +440,26 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
 
   return (
     <div className={styles.page}>
+      {/* Drives */}
+      {drives.length > 0 && (
+        <div className={styles.drivesBar}>
+          {drives.map(d => {
+            const isActive = currentPath.startsWith(d.path)
+            return (
+              <button
+                key={d.path}
+                className={`${styles.driveBtn} ${isActive ? styles.driveBtnActive : ''}`}
+                onClick={() => loadDirectory(d.path)}
+                title={d.path}
+              >
+                {d.type === 'drive' ? '💾' : d.type === 'home' ? '🏠' : '📂'}
+                {d.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <DirectoryPicker value={currentPath} onChange={handlePickDirectory} placeholder="Choose a directory to analyze..." />
 
       {currentPath && (

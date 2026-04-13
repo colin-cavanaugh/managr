@@ -114,6 +114,8 @@ export interface PlatformInfo {
 export const api = {
   platform: () => request<PlatformInfo>('/platform'),
 
+  drives: () => request<{ label: string; path: string; type: 'drive' | 'mount' | 'home' }[]>('/drives'),
+
   rules: {
     list: (enabledOnly = false) =>
       request<{ count: number; rules: Rule[] }>(`/rules${enabledOnly ? '?enabledOnly=true' : ''}`),

@@ -78,6 +78,47 @@ app.get('/api/platform', async (_req, res) => {
   res.json(info)
 })
 
+app.get('/api/drives', async (_req, res) => {
+  const platform = await getPlatform()
+  const drives: { label: string; path: string; type: 'drive' | 'mount' | 'home' }[] = []
+
+  if (os.platform() === 'win32') {
+    // Native Windows — check drive letters A-Z
+    for (let code = 65; code <= 90; code++) {
+      const letter = String.fromCharCode(code)
+      const drivePath = `${letter}:\\`
+      try {
+        await fs.access(drivePath)
+        drives.push({ label: `${letter}:`, path: drivePath, type: 'drive' })
+      } catch { /* not available */ }
+    }
+  } else if (platform.os === 'wsl') {
+    // WSL — list mounted Windows drives + Linux home
+    drives.push({ label: 'Linux Home', path: platform.linuxHome, type: 'home' })
+    try {
+      const mounts = await fs.readdir('/mnt')
+      for (const m of mounts) {
+        if (m.length === 1 && /[a-z]/.test(m)) {
+          const mountPath = `/mnt/${m}`
+          try {
+            await fs.access(mountPath)
+            drives.push({ label: `${m.toUpperCase()}: Drive`, path: mountPath, type: 'drive' })
+          } catch { /* skip */ }
+        }
+      }
+    } catch { /* no /mnt */ }
+    if (platform.windowsHome) {
+      drives.push({ label: 'Windows Home', path: platform.windowsHome, type: 'home' })
+    }
+  } else {
+    // Mac/Linux — show home and root
+    drives.push({ label: 'Home', path: os.homedir(), type: 'home' })
+    drives.push({ label: '/', path: '/', type: 'mount' })
+  }
+
+  res.json(drives)
+})
+
 // ─── Rules ──────────────────────────────────────────────────────────────────
 
 app.get('/api/rules', (_req, res) => {
