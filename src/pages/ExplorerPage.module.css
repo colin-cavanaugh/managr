@@ -466,7 +466,7 @@
   font-size: 11px;
   color: var(--mgr-text-muted);
   font-family: monospace;
-  min-width: 65px;
+  width: 80px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -479,6 +479,8 @@
   opacity: 0;
   transition: opacity 0.12s;
   flex-shrink: 0;
+  width: 140px;
+  justify-content: flex-end;
 }
 
 .fileItem:hover .fileActions {
