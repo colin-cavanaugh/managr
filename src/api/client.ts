@@ -199,5 +199,10 @@ export const api = {
 
     bulkDelete: (paths: string[], useTrash = true) =>
       request<{ deleted: number; errors: string[] }>('/files/bulk-delete', { method: 'POST', body: JSON.stringify({ paths, useTrash }) }),
+
+    search: (dirPath: string, query: string, deep = false, limit = 200) =>
+      request<{ path: string; query: string; deep: boolean; count: number; results: FileEntry[] }>(
+        `/files/search?path=${encodeURIComponent(dirPath)}&q=${encodeURIComponent(query)}&deep=${deep}&limit=${limit}`
+      ),
   },
 }

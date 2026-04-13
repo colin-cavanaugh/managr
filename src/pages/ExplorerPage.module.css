@@ -269,6 +269,75 @@
   overflow-y: auto;
 }
 
+/* ── Search bar ────────────────────────────────────── */
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--mgr-border);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-text);
+  background: var(--mgr-bg-sunken);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.searchInput::placeholder {
+  color: var(--mgr-text-muted);
+}
+
+.searchInput:focus {
+  border-color: var(--mgr-border-focus);
+}
+
+.searchToggle {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-text-muted);
+  background: transparent;
+  border: 1px solid var(--mgr-border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  white-space: nowrap;
+}
+
+.searchToggle:hover {
+  color: var(--mgr-text);
+  border-color: var(--mgr-text-muted);
+}
+
+.searchToggleActive {
+  color: var(--mgr-primary);
+  border-color: var(--mgr-primary);
+  background: rgba(148, 137, 121, 0.08);
+}
+
+.searchCount {
+  font-size: 11px;
+  color: var(--mgr-text-muted);
+  white-space: nowrap;
+}
+
+.searchHighlight {
+  background: rgba(148, 137, 121, 0.25);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
 /* ── File list ─────────────────────────────────────── */
 
 .fileList {

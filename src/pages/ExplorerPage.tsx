@@ -99,6 +99,49 @@ export function ExplorerPage() {
     return () => controller.abort()
   }, [listing])
 
+  // Search
+  const [searchQuery, setSearchQuery] = useState('')
+  const [deepSearch, setDeepSearch] = useState(false)
+  const [searchResults, setSearchResults] = useState<import('../api/client').FileEntry[] | null>(null)
+  const [searching, setSearching] = useState(false)
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+
+    // Clear deep search results when query changes
+    if (deepSearch) {
+      setSearchResults(null)
+      setSearching(false)
+    }
+
+    // Debounce deep search
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    if (deepSearch && query.length >= 2 && currentPath) {
+      setSearching(true)
+      searchTimeout.current = setTimeout(async () => {
+        try {
+          const result = await api.files.search(currentPath, query, true)
+          setSearchResults(result.results)
+        } catch { /* skip */ }
+        setSearching(false)
+      }, 400)
+    }
+  }
+
+  const toggleDeepSearch = () => {
+    const next = !deepSearch
+    setDeepSearch(next)
+    setSearchResults(null)
+    if (next && searchQuery.length >= 2 && currentPath) {
+      setSearching(true)
+      api.files.search(currentPath, searchQuery, true).then(result => {
+        setSearchResults(result.results)
+        setSearching(false)
+      }).catch(() => setSearching(false))
+    }
+  }
+
   // Sorting
   type SortField = 'name' | 'size' | 'modified' | 'accessed' | 'type'
   const [sortField, setSortField] = useState<SortField>('name')
@@ -109,8 +152,14 @@ export function ExplorerPage() {
     else { setSortField(field); setSortAsc(field === 'name') }
   }
 
-  const sortedEntries = listing ? [...listing.entries].sort((a, b) => {
-    // Directories always first
+  // Use deep search results when active, otherwise filter local listing
+  const baseEntries = (deepSearch && searchResults) ? searchResults : (listing?.entries ?? [])
+
+  const filteredEntries = searchQuery && !deepSearch
+    ? baseEntries.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : baseEntries
+
+  const sortedEntries = [...filteredEntries].sort((a, b) => {
     if (a.type !== b.type) return a.type === 'directory' ? -1 : 1
     let cmp = 0
     switch (sortField) {
@@ -125,7 +174,7 @@ export function ExplorerPage() {
       case 'type': cmp = a.extension.localeCompare(b.extension); break
     }
     return sortAsc ? cmp : -cmp
-  }) : []
+  })
 
   // Multi-select
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -207,6 +256,9 @@ export function ExplorerPage() {
       setCurrentPath(dirPath)
       setSelected(new Set())
       setDeepScan(false)
+      setSearchQuery('')
+      setSearchResults(null)
+      setDeepSearch(false)
       return
     }
 
@@ -217,6 +269,9 @@ export function ExplorerPage() {
     setLoading(true)
     setError(null)
     setDeepScan(false)
+    setSearchQuery('')
+    setSearchResults(null)
+    setDeepSearch(false)
     setCurrentPath(dirPath)
     try {
       const [listResult, analysisResult] = await Promise.all([
@@ -437,7 +492,31 @@ export function ExplorerPage() {
             <div className={styles.contentsPanel}>
               <div className={styles.contentsHeader}>
                 <span className={styles.contentsTitle}>Contents</span>
-                {listing && <Badge variant="ghost">{listing.entries.length} items</Badge>}
+                {listing && <Badge variant="ghost">
+                  {searchQuery ? `${sortedEntries.length} of ${listing.entries.length}` : `${listing.entries.length} items`}
+                </Badge>}
+              </div>
+
+              {/* Search bar */}
+              <div className={styles.searchBar}>
+                <input
+                  className={styles.searchInput}
+                  type="text"
+                  placeholder={deepSearch ? 'Search all subfolders...' : 'Filter by name...'}
+                  value={searchQuery}
+                  onChange={e => handleSearchChange(e.target.value)}
+                />
+                <button
+                  className={`${styles.searchToggle} ${deepSearch ? styles.searchToggleActive : ''}`}
+                  onClick={toggleDeepSearch}
+                  title="Search all subfolders recursively"
+                >
+                  {deepSearch ? 'Deep search ON' : 'Deep search'}
+                </button>
+                {searching && <Loader size="inline" text="" />}
+                {searchQuery && !searching && (
+                  <span className={styles.searchCount}>{sortedEntries.length} found</span>
+                )}
               </div>
 
               {/* Sort bar */}

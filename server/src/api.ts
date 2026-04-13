@@ -346,6 +346,57 @@ app.get('/api/files/duplicates', async (req, res) => {
   }
 })
 
+// ─── Search ─────────────────────────────────────────────────────────────────
+
+app.get('/api/files/search', async (req, res) => {
+  const dirPath = req.query.path as string
+  const query = (req.query.q as string || '').toLowerCase()
+  const deep = req.query.deep === 'true'
+  const maxResults = Number(req.query.limit) || 200
+
+  if (!dirPath || !query) return res.status(400).json({ error: 'path and q are required' })
+
+  try {
+    const results: { name: string; path: string; type: 'file' | 'directory'; size: number; modified: string; extension: string }[] = []
+
+    async function search(dir: string, depth = 0): Promise<void> {
+      if (results.length >= maxResults) return
+      if (depth > 10) return
+      let entries
+      try { entries = await fs.readdir(dir, { withFileTypes: true }) } catch { return }
+
+      for (const entry of entries) {
+        if (results.length >= maxResults) return
+        if (entry.name.startsWith('.')) continue
+        const fullPath = path.join(dir, entry.name)
+
+        if (entry.name.toLowerCase().includes(query)) {
+          try {
+            const stat = await fs.stat(fullPath)
+            results.push({
+              name: entry.name,
+              path: fullPath,
+              type: entry.isDirectory() ? 'directory' : 'file',
+              size: entry.isFile() ? stat.size : 0,
+              modified: stat.mtime.toISOString(),
+              extension: entry.isDirectory() ? '' : path.extname(entry.name).toLowerCase(),
+            })
+          } catch { /* skip */ }
+        }
+
+        if (deep && entry.isDirectory()) {
+          await search(fullPath, depth + 1)
+        }
+      }
+    }
+
+    await search(dirPath)
+    res.json({ path: dirPath, query, deep, count: results.length, results })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
+  }
+})
+
 // ─── File Operations (with activity logging) ───────────────────────────────
 
 function logAction(action: string, sourcePath: string, destPath: string | null, status: 'success' | 'error', error?: string) {
