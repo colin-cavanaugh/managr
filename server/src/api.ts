@@ -98,25 +98,18 @@ app.get('/api/drives', async (_req, res) => {
         } catch { /* truly not available */ }
       }
     }
-    // Check for WSL filesystems accessible from Windows
-    // Try multiple UNC path formats — Windows version determines which works
-    const wslPaths = ['//wsl.localhost', '//wsl$', String.raw`\\wsl.localhost`, String.raw`\\wsl$`]
-    let wslFound = false
-    for (const wslRoot of wslPaths) {
-      if (wslFound) break
-      try {
-        const distros = await fs.readdir(wslRoot)
-        for (const distro of distros) {
-          if (distro.startsWith('.')) continue
-          const distroPath = path.join(wslRoot, distro)
-          try {
-            await fs.readdir(distroPath)
-            drives.push({ label: distro, path: distroPath, type: 'mount' })
-            wslFound = true
-          } catch { /* skip inaccessible */ }
-        }
-      } catch { /* this path format doesn't work, try next */ }
-    }
+    // Check for WSL distros using the wsl command, then map to UNC paths
+    try {
+      const { execSync } = require('child_process')
+      const wslOutput = execSync('wsl -l -q', { encoding: 'utf-8', windowsHide: true })
+      // wsl -l -q output may have UTF-16 null bytes — clean them
+      const distros = wslOutput.replace(/\0/g, '').split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean)
+      for (const distro of distros) {
+        if (distro.toLowerCase() === 'docker-desktop') continue
+        const distroPath = `\\\\wsl.localhost\\${distro}`
+        drives.push({ label: distro, path: distroPath, type: 'mount' })
+      }
+    } catch { /* wsl not available */ }
   } else if (platform.os === 'wsl') {
     // WSL — list mounted Windows drives + Linux home
     drives.push({ label: 'Linux Home', path: platform.linuxHome, type: 'home' })
