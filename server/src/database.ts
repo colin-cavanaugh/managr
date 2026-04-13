@@ -65,10 +65,25 @@ const SCHEMA = `
     value TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS frequent_dirs (
+    path       TEXT PRIMARY KEY,
+    visit_count INTEGER NOT NULL DEFAULT 1,
+    last_visited TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS pinned_dirs (
+    id         TEXT PRIMARY KEY,
+    path       TEXT NOT NULL UNIQUE,
+    label      TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON activity_log(timestamp);
   CREATE INDEX IF NOT EXISTS idx_activity_rule ON activity_log(rule_id);
   CREATE INDEX IF NOT EXISTS idx_snapshots_batch ON snapshots(batch_id);
   CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled);
+  CREATE INDEX IF NOT EXISTS idx_frequent_visits ON frequent_dirs(visit_count DESC);
 `
 
 // ─── Database class ─────────────────────────────────────────────────────────
@@ -258,6 +273,46 @@ export class ManagrDB {
       config[row.key] = row.value
     }
     return config
+  }
+
+  // ── Frequent Dirs ─────────────────────────────────────────────────────
+
+  recordVisit(dirPath: string): void {
+    const now = new Date().toISOString()
+    this.db.prepare(
+      `INSERT INTO frequent_dirs (path, visit_count, last_visited) VALUES (?, 1, ?)
+       ON CONFLICT(path) DO UPDATE SET visit_count = visit_count + 1, last_visited = ?`
+    ).run(dirPath, now, now)
+  }
+
+  getFrequentDirs(limit = 4): { path: string; visitCount: number; lastVisited: string }[] {
+    const rows = this.db.prepare(
+      'SELECT path, visit_count, last_visited FROM frequent_dirs ORDER BY visit_count DESC, last_visited DESC LIMIT ?'
+    ).all(limit) as { path: string; visit_count: number; last_visited: string }[]
+    return rows.map(r => ({ path: r.path, visitCount: r.visit_count, lastVisited: r.last_visited }))
+  }
+
+  // ── Pinned Dirs ───────────────────────────────────────────────────────
+
+  pinDir(dirPath: string, label: string): { id: string; path: string; label: string } {
+    const id = randomUUID()
+    const now = new Date().toISOString()
+    const maxOrder = this.db.prepare('SELECT MAX(sort_order) as m FROM pinned_dirs').get() as { m: number | null }
+    const order = (maxOrder.m ?? -1) + 1
+    this.db.prepare(
+      'INSERT OR IGNORE INTO pinned_dirs (id, path, label, sort_order, created_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(id, dirPath, label, order, now)
+    return { id, path: dirPath, label }
+  }
+
+  unpinDir(dirPath: string): boolean {
+    const result = this.db.prepare('DELETE FROM pinned_dirs WHERE path = ?').run(dirPath)
+    return result.changes > 0
+  }
+
+  getPinnedDirs(): { id: string; path: string; label: string }[] {
+    const rows = this.db.prepare('SELECT id, path, label FROM pinned_dirs ORDER BY sort_order').all() as { id: string; path: string; label: string }[]
+    return rows
   }
 }
 

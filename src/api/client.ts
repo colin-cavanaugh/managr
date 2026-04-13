@@ -164,6 +164,20 @@ export const api = {
       request<{ status: string }>('/watcher/stop', { method: 'POST' }),
   },
 
+  dirs: {
+    frequent: () =>
+      request<{ path: string; visitCount: number; lastVisited: string }[]>('/dirs/frequent'),
+
+    pinned: () =>
+      request<{ id: string; path: string; label: string }[]>('/dirs/pinned'),
+
+    pin: (dirPath: string, label?: string) =>
+      request<{ id: string; path: string; label: string }>('/dirs/pin', { method: 'POST', body: JSON.stringify({ path: dirPath, label }) }),
+
+    unpin: (dirPath: string) =>
+      request<{ status: string }>('/dirs/pin', { method: 'DELETE', body: JSON.stringify({ path: dirPath }) }),
+  },
+
   files: {
     list: (dirPath?: string) => {
       const params = dirPath ? `?path=${encodeURIComponent(dirPath)}` : ''

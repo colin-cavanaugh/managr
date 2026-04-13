@@ -253,6 +253,9 @@ app.get('/api/files/list', async (req, res) => {
       return a.name.localeCompare(b.name)
     })
 
+    // Auto-track visit for frequent dirs
+    db.recordVisit(dirPath)
+
     res.json({ path: dirPath, parent: path.dirname(dirPath), entries: files })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
@@ -344,6 +347,37 @@ app.get('/api/files/duplicates', async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
   }
+})
+
+// ─── Frequent & Pinned Dirs ─────────────────────────────────────────────────
+
+app.post('/api/dirs/visit', (req, res) => {
+  const { path: dirPath } = req.body as { path: string }
+  if (!dirPath) return res.status(400).json({ error: 'path is required' })
+  db.recordVisit(dirPath)
+  res.json({ status: 'recorded' })
+})
+
+app.get('/api/dirs/frequent', (_req, res) => {
+  res.json(db.getFrequentDirs(4))
+})
+
+app.get('/api/dirs/pinned', (_req, res) => {
+  res.json(db.getPinnedDirs())
+})
+
+app.post('/api/dirs/pin', (req, res) => {
+  const { path: dirPath, label } = req.body as { path: string; label: string }
+  if (!dirPath) return res.status(400).json({ error: 'path is required' })
+  const pin = db.pinDir(dirPath, label || dirPath.split(/[\\/]/).pop() || dirPath)
+  res.json(pin)
+})
+
+app.delete('/api/dirs/pin', (req, res) => {
+  const { path: dirPath } = req.body as { path: string }
+  if (!dirPath) return res.status(400).json({ error: 'path is required' })
+  db.unpinDir(dirPath)
+  res.json({ status: 'unpinned' })
 })
 
 // ─── Search ─────────────────────────────────────────────────────────────────

@@ -29,7 +29,13 @@ const TRIGGER_OPTIONS = [
   { value: 'manual', label: 'Manual' },
 ]
 
-export function ExplorerPage() {
+interface ExplorerPageProps {
+  onPathChange?: (path: string) => void
+  externalNav?: string | null
+  externalNavTrigger?: number
+}
+
+export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: ExplorerPageProps) {
   const [currentPath, setCurrentPath] = useState('')
   const [listing, setListing] = useState<DirectoryListing | null>(null)
   const [analysis, setAnalysis] = useState<DirectoryAnalysis | null>(null)
@@ -220,6 +226,19 @@ export function ExplorerPage() {
     }).catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Report path changes to parent
+  useEffect(() => {
+    onPathChange?.(currentPath)
+  }, [currentPath, onPathChange])
+
+  // Handle external navigation from sidebar
+  useEffect(() => {
+    if (externalNav && externalNavTrigger) {
+      loadDirectory(externalNav)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalNavTrigger])
 
   // Single file actions
   const [moveTarget, setMoveTarget] = useState<string | null>(null)
