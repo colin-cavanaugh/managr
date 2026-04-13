@@ -41,15 +41,39 @@ export function ExplorerPage() {
   // Cache: path → { listing, analysis, dirSizes }
   const cache = useRef<Record<string, { listing: DirectoryListing; analysis: DirectoryAnalysis; dirSizes: Record<string, number> }>>({})
 
-  // Lazy dir sizes
+  // Lazy dir sizes with pause/resume
   const [dirSizes, setDirSizes] = useState<Record<string, number>>({})
   const [sizesLoading, setSizesLoading] = useState(false)
+  const [sizesPaused, setSizesPaused] = useState(false)
   const sizeAbort = useRef<AbortController | null>(null)
 
-  const stopLoadingSizes = () => {
+  const pauseSizeLoading = () => {
     sizeAbort.current?.abort()
+    setSizesPaused(true)
     setSizesLoading(false)
   }
+
+  const resumeSizeLoading = useCallback(() => {
+    if (!listing) return
+    setSizesPaused(false)
+    setSizesLoading(true)
+    const controller = new AbortController()
+    sizeAbort.current = controller
+    const dirs = listing.entries.filter(e => e.type === 'directory')
+    ;(async () => {
+      for (const dir of dirs) {
+        if (controller.signal.aborted) return
+        // Skip already loaded
+        if (dirSizes[dir.path] !== undefined) continue
+        try {
+          const result = await api.files.size(dir.path)
+          if (controller.signal.aborted) return
+          setDirSizes(prev => ({ ...prev, [dir.path]: result.size }))
+        } catch { /* skip */ }
+      }
+      setSizesLoading(false)
+    })()
+  }, [listing, dirSizes])
 
   useEffect(() => {
     if (!listing) return
@@ -57,6 +81,7 @@ export function ExplorerPage() {
     const controller = new AbortController()
     sizeAbort.current = controller
     setDirSizes({})
+    setSizesPaused(false)
     const dirs = listing.entries.filter(e => e.type === 'directory')
     if (dirs.length === 0) return
     setSizesLoading(true)
@@ -216,18 +241,31 @@ export function ExplorerPage() {
     }
   }, [currentPath, listing, analysis, dirSizes, sizesLoading])
 
+  const deepScanAbort = useRef<AbortController | null>(null)
+
   const handleDeepScan = async () => {
     if (!currentPath) return
+    deepScanAbort.current?.abort()
+    const controller = new AbortController()
+    deepScanAbort.current = controller
     setDeepScanning(true)
     try {
       const result = await api.files.analyze(currentPath, true)
+      if (controller.signal.aborted) return
       setAnalysis(result)
       setDeepScan(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      if (!controller.signal.aborted) {
+        setError(err instanceof Error ? err.message : String(err))
+      }
     } finally {
       setDeepScanning(false)
     }
+  }
+
+  const stopDeepScan = () => {
+    deepScanAbort.current?.abort()
+    setDeepScanning(false)
   }
 
   const handlePickDirectory = (dirPath: string) => loadDirectory(dirPath)
@@ -367,7 +405,12 @@ export function ExplorerPage() {
                       Scan all subfolders
                     </button>
                   )}
-                  {deepScanning && <Loader size="inline" text="Deep scanning..." />}
+                  {deepScanning && (
+                    <>
+                      <Loader size="inline" text="Deep scanning..." />
+                      <button className={styles.stopBtn} onClick={stopDeepScan}>Stop</button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className={styles.breakdownScroll}>
@@ -410,12 +453,19 @@ export function ExplorerPage() {
                   </button>
                 ))}
                 {sizesLoading && (
-                  <button className={styles.stopBtn} onClick={stopLoadingSizes}>
-                    Stop loading sizes
+                  <button className={styles.stopBtn} onClick={pauseSizeLoading}>
+                    Pause sizes
                   </button>
                 )}
-                {!sizesLoading && Object.keys(dirSizes).length > 0 && (
-                  <span className={styles.loadingIndicator}>Sizes loaded</span>
+                {sizesPaused && (
+                  <button className={styles.sortBtnActive + ' ' + styles.sortBtn} onClick={resumeSizeLoading} style={{ borderColor: 'var(--mgr-primary)', color: 'var(--mgr-primary)' }}>
+                    Resume sizes ({Object.keys(dirSizes).length}/{listing?.entries.filter(e => e.type === 'directory').length ?? 0})
+                  </button>
+                )}
+                {!sizesLoading && !sizesPaused && Object.keys(dirSizes).length > 0 && (
+                  <span className={styles.loadingIndicator}>
+                    {Object.keys(dirSizes).length} sizes loaded
+                  </span>
                 )}
               </div>
 

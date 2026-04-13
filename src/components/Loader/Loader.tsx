@@ -17,9 +17,14 @@ export function Loader({ text = 'Loading...', size = 'default', className = '' }
     return (
       <div className={`${styles.loader} ${styles.inline} ${className}`}>
         <div className={styles.icon}>
-          <LogoIcon size={20} darkMode={isDark} />
+          <LogoIcon size={16} darkMode={isDark} />
         </div>
         <span className={styles.text}>{text}</span>
+        <div className={styles.inlineDots}>
+          <div className={styles.inlineDot} />
+          <div className={styles.inlineDot} />
+          <div className={styles.inlineDot} />
+        </div>
       </div>
     )
   }
