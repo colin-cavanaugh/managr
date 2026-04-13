@@ -343,6 +343,11 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
 
   const handleDeepScan = async () => {
     if (!currentPath) return
+    // Stop volume loading — deep scan will cover it
+    sizeAbort.current?.abort()
+    setSizesLoading(false)
+    setSizesPaused(false)
+
     deepScanAbort.current?.abort()
     const controller = new AbortController()
     deepScanAbort.current = controller
