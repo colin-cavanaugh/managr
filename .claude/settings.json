@@ -41,7 +41,8 @@
       "Bash(convert -background none -density 384 /home/colin/managr/src/assets/managr-icon.svg -resize 256x256 -gravity center -extent 256x256 PNG32:/tmp/managr-256.png)",
       "Bash(identify /tmp/managr-256.png)",
       "Bash(convert /tmp/managr-256.png '\\(' -clone 0 -resize 16x16 '\\)' '\\(' -clone 0 -resize 32x32 '\\)' '\\(' -clone 0 -resize 48x48 '\\)' '\\(' -clone 0 -resize 64x64 '\\)' '\\(' -clone 0 -resize 128x128 '\\)' '\\(' -clone 0 -resize 256x256 '\\)' -delete 0 /home/colin/managr/build/icon.ico)",
-      "Bash(identify /home/colin/managr/build/icon.ico)"
+      "Bash(identify /home/colin/managr/build/icon.ico)",
+      "Bash(git checkout:*)"
     ],
     "additionalDirectories": [
       "/mnt/c/Users/light/OneDrive/Desktop",

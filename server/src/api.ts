@@ -88,9 +88,27 @@ app.get('/api/drives', async (_req, res) => {
       const letter = String.fromCharCode(code)
       const drivePath = `${letter}:\\`
       try {
-        await fs.access(drivePath)
+        // Use readdir instead of access — more reliable for removable/network drives
+        await fs.readdir(drivePath)
         drives.push({ label: `${letter}:`, path: drivePath, type: 'drive' })
       } catch { /* not available */ }
+    }
+    // Check for WSL filesystems accessible from Windows
+    try {
+      const wslDistros = await fs.readdir('\\\\wsl$')
+      for (const distro of wslDistros) {
+        const wslPath = `\\\\wsl$\\${distro}`
+        drives.push({ label: `🐧 ${distro}`, path: wslPath, type: 'mount' })
+      }
+    } catch {
+      // Try the newer wsl.localhost path
+      try {
+        const wslDistros = await fs.readdir('\\\\wsl.localhost')
+        for (const distro of wslDistros) {
+          const wslPath = `\\\\wsl.localhost\\${distro}`
+          drives.push({ label: `🐧 ${distro}`, path: wslPath, type: 'mount' })
+        }
+      } catch { /* no WSL */ }
     }
   } else if (platform.os === 'wsl') {
     // WSL — list mounted Windows drives + Linux home
