@@ -45,8 +45,12 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
   const [deepScanning, setDeepScanning] = useState(false)
   const [drives, setDrives] = useState<{ label: string; path: string; type: string }[]>([])
 
+  // Poll for drive changes every 5 seconds
   useEffect(() => {
-    api.drives().then(setDrives).catch(() => {})
+    const fetchDrives = () => api.drives().then(setDrives).catch(() => {})
+    fetchDrives()
+    const interval = setInterval(fetchDrives, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   // Cache: path → { listing, analysis, dirSizes }
