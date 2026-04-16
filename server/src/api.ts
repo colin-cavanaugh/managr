@@ -363,40 +363,62 @@ app.get('/api/files/analyze', async (req, res) => {
       if (depth > 10) return 0
       if (isSkipped(dir)) return 0
 
-      let dirTotal = 0
       let entries
       try { entries = await fs.readdir(dir, { withFileTypes: true }) } catch { return 0 }
 
+      // Separate files and subdirs in one pass, filtering hidden/skipped upfront
+      const filePaths: string[] = []
+      const subDirs: string[] = []
       for (const entry of entries) {
         if (entry.name.startsWith('.')) continue
         const fullPath = path.join(dir, entry.name)
         if (isSkipped(fullPath)) continue
-        try {
-          if (entry.isDirectory()) {
-            if (depth === 0) dirCount++
-            if (deep) {
-              const subTopDir = depth === 0 ? fullPath : topDir
-              if (depth === 0) folderExtensions[fullPath] = new Set()
-              const subSize = await scan(fullPath, depth + 1, subTopDir)
-              dirTotal += subSize
-              // Only cache direct children — keeps response small and fast
-              if (depth === 0) {
-                folderSizes[fullPath] = subSize
-              }
-            }
-          } else if (entry.isFile()) {
-            const stat = await fs.stat(fullPath)
-            fileCount++
-            totalSize += stat.size
-            dirTotal += stat.size
-            const ext = path.extname(entry.name).toLowerCase() || '(none)'
-            if (!byExtension[ext]) byExtension[ext] = { count: 0, size: 0 }
-            byExtension[ext].count++
-            byExtension[ext].size += stat.size
-            if (topDir !== undefined) folderExtensions[topDir]?.add(ext)
-          }
-        } catch { /* skip */ }
+        if (entry.isDirectory()) {
+          if (depth === 0) dirCount++
+          subDirs.push(fullPath)
+        } else if (entry.isFile()) {
+          filePaths.push(fullPath)
+        }
       }
+
+      // Stat all files in this directory in parallel — eliminates the sequential bottleneck
+      const statResults = await Promise.all(filePaths.map(p => fs.stat(p).catch(() => null)))
+
+      let dirTotal = 0
+      for (let i = 0; i < filePaths.length; i++) {
+        const stat = statResults[i]
+        if (!stat) continue
+        fileCount++
+        totalSize += stat.size
+        dirTotal += stat.size
+        const ext = path.extname(filePaths[i]).toLowerCase() || '(none)'
+        if (!byExtension[ext]) byExtension[ext] = { count: 0, size: 0 }
+        byExtension[ext].count++
+        byExtension[ext].size += stat.size
+        if (topDir !== undefined) folderExtensions[topDir]?.add(ext)
+      }
+
+      if (!deep) return dirTotal
+
+      // Initialise folderExtensions sets for all direct subdirs before recursing
+      if (depth === 0) {
+        for (const sd of subDirs) folderExtensions[sd] = new Set()
+      }
+
+      if (depth === 0) {
+        // Scan all top-level subdirs in parallel — each branch runs concurrently
+        const subSizes = await Promise.all(subDirs.map(sd => scan(sd, 1, sd)))
+        for (let i = 0; i < subDirs.length; i++) {
+          folderSizes[subDirs[i]] = subSizes[i]
+          dirTotal += subSizes[i]
+        }
+      } else {
+        // Sequential at deeper levels — keeps total concurrency bounded
+        for (const sd of subDirs) {
+          dirTotal += await scan(sd, depth + 1, topDir)
+        }
+      }
+
       return dirTotal
     }
 
