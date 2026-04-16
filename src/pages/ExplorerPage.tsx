@@ -358,7 +358,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
       setDirSizes(cached.dirSizes)
       setCurrentPath(dirPath)
       setSelected(new Set())
-      setDeepScan(false)
+      setDeepScan(!!cached.analysis.folderExtensions)
       setSearchQuery('')
       setSearchResults(null)
       setDeepSearch(false)
@@ -419,6 +419,10 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
       if (controller.signal.aborted) return
       setAnalysis(result)
       setDeepScan(true)
+      // Persist deep scan result into cache so navigation preserves folderExtensions
+      if (cache.current[currentPath]) {
+        cache.current[currentPath] = { ...cache.current[currentPath], analysis: result }
+      }
       // Populate ALL folder sizes into global cache + local state
       if (result.folderSizes) {
         // Store every folder size in the global session cache
