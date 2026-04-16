@@ -316,6 +316,14 @@
   overflow-y: auto;
 }
 
+.upLevel {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--mgr-bg-raised);
+  border-bottom: 1px solid var(--mgr-border);
+}
+
 /* ── Search bar ────────────────────────────────────── */
 
 .searchBar {

@@ -35,6 +35,9 @@ interface ExplorerPageProps {
   externalNavTrigger?: number
 }
 
+// Global session cache — persists across directory navigation until app closes
+const globalSizeCache: Record<string, number> = {}
+
 export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: ExplorerPageProps) {
   const [currentPath, setCurrentPath] = useState('')
   const [listing, setListing] = useState<DirectoryListing | null>(null)
@@ -78,11 +81,16 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     ;(async () => {
       for (const dir of dirs) {
         if (controller.signal.aborted) return
-        // Skip already loaded
+        // Skip already loaded (local state or global cache)
         if (dirSizes[dir.path] !== undefined) continue
+        if (globalSizeCache[dir.path] !== undefined) {
+          setDirSizes(prev => ({ ...prev, [dir.path]: globalSizeCache[dir.path] }))
+          continue
+        }
         try {
           const result = await api.files.size(dir.path)
           if (controller.signal.aborted) return
+          globalSizeCache[dir.path] = result.size
           setDirSizes(prev => ({ ...prev, [dir.path]: result.size }))
         } catch { /* skip */ }
       }
@@ -106,10 +114,28 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     sizeAbort.current?.abort()
     const controller = new AbortController()
     sizeAbort.current = controller
-    setDirSizes({})
     setSizesPaused(false)
+
     const dirs = listing.entries.filter(e => e.type === 'directory')
-    if (dirs.length === 0) return
+    if (dirs.length === 0) { setDirSizes({}); return }
+
+    // Check global cache — populate immediately what we already know
+    const cached: Record<string, number> = {}
+    const uncached: typeof dirs = []
+    for (const dir of dirs) {
+      if (globalSizeCache[dir.path] !== undefined) {
+        cached[dir.path] = globalSizeCache[dir.path]
+      } else {
+        uncached.push(dir)
+      }
+    }
+    setDirSizes(cached)
+
+    // If everything is already cached, we're done
+    if (uncached.length === 0) {
+      setSizesLoading(false)
+      return
+    }
 
     // Don't auto-scan at drive roots — require manual start
     if (isDriveRoot(currentPath)) {
@@ -120,11 +146,13 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
 
     setSizesLoading(true)
     ;(async () => {
-      for (const dir of dirs) {
+      for (const dir of uncached) {
         if (controller.signal.aborted) return
         try {
           const result = await api.files.size(dir.path)
           if (controller.signal.aborted) return
+          // Store in global cache
+          globalSizeCache[dir.path] = result.size
           setDirSizes(prev => ({ ...prev, [dir.path]: result.size }))
         } catch { /* skip */ }
       }
@@ -361,9 +389,20 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
       if (controller.signal.aborted) return
       setAnalysis(result)
       setDeepScan(true)
-      // Populate folder sizes from deep scan results
+      // Populate ALL folder sizes into global cache + local state
       if (result.folderSizes) {
-        setDirSizes(prev => ({ ...prev, ...result.folderSizes }))
+        // Store every folder size in the global session cache
+        Object.assign(globalSizeCache, result.folderSizes)
+        // Set sizes for current directory's immediate children
+        const currentDirSizes: Record<string, number> = {}
+        if (listing) {
+          for (const entry of listing.entries) {
+            if (entry.type === 'directory' && result.folderSizes[entry.path] !== undefined) {
+              currentDirSizes[entry.path] = result.folderSizes[entry.path]
+            }
+          }
+        }
+        setDirSizes(prev => ({ ...prev, ...currentDirSizes }))
         setSizesLoading(false)
         setSizesPaused(false)
         sizeAbort.current?.abort()
@@ -668,7 +707,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
               <div className={styles.contentsScroll}>
                 <div className={styles.fileList}>
                   {listing && listing.parent !== listing.path && (
-                    <div className={`${styles.fileItem} ${styles.fileItemDir}`} onClick={() => navigateTo(listing.parent)}>
+                    <div className={`${styles.fileItem} ${styles.fileItemDir} ${styles.upLevel}`} onClick={() => navigateTo(listing.parent)}>
                       <div className={`${styles.fileIcon} ${styles.fileIconDir}`} style={{ fontSize: 16 }}>↑</div>
                       <div className={styles.fileInfo}><div className={styles.fileName}>..</div></div>
                     </div>

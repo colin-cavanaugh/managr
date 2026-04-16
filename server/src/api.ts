@@ -371,7 +371,8 @@ app.get('/api/files/analyze', async (req, res) => {
             if (deep) {
               const subSize = await scan(fullPath, depth + 1)
               dirTotal += subSize
-              if (depth === 0) folderSizes[fullPath] = subSize
+              // Record ALL directory sizes, not just top-level
+              folderSizes[fullPath] = subSize
             }
           } else if (entry.isFile()) {
             const stat = await fs.stat(fullPath)
