@@ -140,6 +140,7 @@
   padding: 4px 6px;
   border-radius: 4px;
   transition: background 0.15s;
+  cursor: pointer;
 }
 
 .breakdownRow:hover {
@@ -205,6 +206,57 @@
 
 .breakdownExtKnown {
   cursor: help;
+}
+
+.breakdownRowSelected {
+  background: var(--mgr-bg-sunken);
+  outline: 1px solid var(--mgr-primary);
+  outline-offset: -1px;
+  border-radius: 4px;
+}
+
+.breakdownRowSelected .breakdownBarInner {
+  background: var(--mgr-primary);
+  opacity: 0.9;
+}
+
+.extFilterPill {
+  margin-left: auto;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-family: var(--mgr-font-family);
+  background: var(--mgr-primary);
+  color: var(--mgr-primary-text);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+
+.extFilterPill:hover {
+  opacity: 0.8;
+}
+
+.extFilterHint {
+  padding: 4px 14px;
+  font-size: 11px;
+  color: var(--mgr-text-muted);
+  background: var(--mgr-bg-sunken);
+  border-bottom: 1px solid var(--mgr-border);
+  flex-shrink: 0;
+}
+
+.extFilterHintBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-family: var(--mgr-font-family);
+  color: var(--mgr-primary);
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .extTooltip {

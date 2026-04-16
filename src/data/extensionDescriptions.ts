@@ -267,6 +267,11 @@ const descriptions: Record<string, string> = {
   '.lock':  'Lock file — prevents concurrent access, usually auto-managed',
   '.pid':   'Process ID file — stores a running process\'s ID',
   '.map':   'Source map — links minified code back to original source for debugging',
+  '.dat':      'Generic data file — used by many programs for settings, cache, or binary data',
+  '.log1':     'Windows Registry transaction log (part 1) — used for registry recovery',
+  '.log2':     'Windows Registry transaction log (part 2) — used for registry recovery',
+  '.regtrans-ms': 'Windows Registry transaction log — temporary file used during registry writes',
+  '.blf':      'Windows Base Log File — transaction log header used by the registry',
 
   // Security & Certificates
   '.pem':  'PEM certificate or private key — base64-encoded, used in TLS/SSL',

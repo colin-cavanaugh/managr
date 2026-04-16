@@ -48,6 +48,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
   const [deepScan, setDeepScan] = useState(false)
   const [deepScanning, setDeepScanning] = useState(false)
   const [drives, setDrives] = useState<{ label: string; path: string; type: string }[]>([])
+  const [selectedExt, setSelectedExt] = useState<string | null>(null)
 
   // Poll for drive changes every 5 seconds
   useEffect(() => {
@@ -239,13 +240,24 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     return sortAsc ? cmp : -cmp
   })
 
+  // Extension filter applied after sort
+  const extFilteredEntries = selectedExt
+    ? sortedEntries.filter(entry => {
+        if (entry.type === 'file') return entry.extension === selectedExt
+        // Directories: filter by folderExtensions when deep scan data is available,
+        // otherwise hide all folders (we have no data on their contents)
+        if (!deepScan || !analysis?.folderExtensions) return false
+        return analysis.folderExtensions[entry.path]?.includes(selectedExt) ?? false
+      })
+    : sortedEntries
+
   // Multi-select
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const lastClickedIdx = useRef<number | null>(null)
 
   // Ref to current visible (sorted) entries so shift-select uses the right order
   const visibleEntries = useRef<{ path: string }[]>([])
-  visibleEntries.current = sortedEntries
+  visibleEntries.current = extFilteredEntries
 
   const toggleSelect = (entryPath: string, idx: number, shiftKey: boolean) => {
     setSelected(prev => {
@@ -338,6 +350,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
       setSearchQuery('')
       setSearchResults(null)
       setDeepSearch(false)
+      setSelectedExt(null)
       return
     }
 
@@ -351,6 +364,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     setSearchQuery('')
     setSearchResults(null)
     setDeepSearch(false)
+    setSelectedExt(null)
     setCurrentPath(dirPath)
     try {
       const [listResult, analysisResult] = await Promise.all([
@@ -615,10 +629,12 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                   <div className={styles.breakdown}>
                     {analysis.breakdown.map(item => {
                       const desc = getExtDescription(item.extension)
+                      const isSelected = selectedExt === item.extension
                       return (
                         <div
                           key={item.extension}
-                          className={styles.breakdownRow}
+                          className={[styles.breakdownRow, isSelected ? styles.breakdownRowSelected : ''].filter(Boolean).join(' ')}
+                          onClick={() => setSelectedExt(prev => prev === item.extension ? null : item.extension)}
                           onMouseEnter={desc ? e => {
                             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
                             setExtTooltip({ text: desc, x: rect.right + 10, y: rect.top + rect.height / 2 })
@@ -630,7 +646,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                             <div className={styles.breakdownBarInner} style={{ width: `${(item.size / maxSize) * 100}%` }} />
                           </div>
                           <span className={styles.breakdownCount}>{item.count} · {humanSize(item.size)}</span>
-                          <button className={styles.breakdownRule} onClick={() => openQuickRule(item.extension)}>+ Rule</button>
+                          <button className={styles.breakdownRule} onClick={e => { e.stopPropagation(); openQuickRule(item.extension) }}>+ Rule</button>
                         </div>
                       )
                     })}
@@ -644,9 +660,21 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
               <div className={styles.contentsHeader}>
                 <span className={styles.contentsTitle}>Contents</span>
                 {listing && <Badge variant="ghost">
-                  {searchQuery ? `${sortedEntries.length} of ${listing.entries.length}` : `${listing.entries.length} items`}
+                  {(searchQuery || selectedExt)
+                    ? `${extFilteredEntries.length} of ${listing.entries.length}`
+                    : `${listing.entries.length} items`}
                 </Badge>}
+                {selectedExt && (
+                  <button className={styles.extFilterPill} onClick={() => setSelectedExt(null)}>
+                    {selectedExt} ×
+                  </button>
+                )}
               </div>
+              {selectedExt && !deepScan && (
+                <div className={styles.extFilterHint}>
+                  Folders hidden — <button className={styles.extFilterHintBtn} onClick={handleDeepScan}>Deep Scan</button> to filter them too
+                </div>
+              )}
 
               {/* Search bar */}
               <div className={styles.searchBar}>
@@ -666,7 +694,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                 </button>
                 {searching && <Loader size="inline" text="" />}
                 {searchQuery && !searching && (
-                  <span className={styles.searchCount}>{sortedEntries.length} found</span>
+                  <span className={styles.searchCount}>{extFilteredEntries.length} found</span>
                 )}
               </div>
 
@@ -728,7 +756,7 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                     </div>
                   )}
 
-                  {sortedEntries.map((entry, idx) => {
+                  {extFilteredEntries.map((entry, idx) => {
                     const isDir = entry.type === 'directory'
                     const isSelected = selected.has(entry.path)
                     return (
@@ -785,7 +813,15 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                     )
                   })}
 
-                  {sortedEntries.length === 0 && !loading && <div className={styles.loading}>Empty directory</div>}
+                  {extFilteredEntries.length === 0 && !loading && (
+                    <div className={styles.loading}>
+                      {selectedExt
+                        ? deepScan
+                          ? `No ${selectedExt} files or folders containing them here`
+                          : `No ${selectedExt} files directly in this folder`
+                        : 'Empty directory'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

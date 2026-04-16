@@ -101,6 +101,7 @@ export interface DirectoryAnalysis {
   totalSize: number
   breakdown: { extension: string; count: number; size: number }[]
   folderSizes?: Record<string, number>
+  folderExtensions?: Record<string, string[]>
 }
 
 // ─── Rules ──────────────────────────────────────────────────────────────────
