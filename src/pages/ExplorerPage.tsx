@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type DirectoryAnalysis, type DirectoryListing } from '../api/client'
 import { Badge, Button, DirectoryPicker, DriveIcon, FileIcon, Input, Loader, Modal, Select } from '../components'
 import { getExtDescription } from '../data/extensionDescriptions'
@@ -240,14 +240,26 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
     return sortAsc ? cmp : -cmp
   })
 
+  // Normalised folder→extensions map: forward slashes + lowercase so path
+  // separator differences between the list and analyze responses never cause misses
+  const normFolderExts = useMemo(() => {
+    if (!analysis?.folderExtensions) return null
+    const map = new Map<string, string[]>()
+    for (const [p, exts] of Object.entries(analysis.folderExtensions)) {
+      map.set(p.replace(/\\/g, '/').toLowerCase(), exts)
+    }
+    return map
+  }, [analysis?.folderExtensions])
+
   // Extension filter applied after sort
   const extFilteredEntries = selectedExt
     ? sortedEntries.filter(entry => {
         if (entry.type === 'file') return entry.extension === selectedExt
         // Directories: filter by folderExtensions when deep scan data is available,
         // otherwise hide all folders (we have no data on their contents)
-        if (!deepScan || !analysis?.folderExtensions) return false
-        return analysis.folderExtensions[entry.path]?.includes(selectedExt) ?? false
+        if (!deepScan || !normFolderExts) return false
+        const normPath = entry.path.replace(/\\/g, '/').toLowerCase()
+        return normFolderExts.get(normPath)?.includes(selectedExt) ?? false
       })
     : sortedEntries
 
