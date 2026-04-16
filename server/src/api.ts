@@ -356,10 +356,6 @@ app.get('/api/files/analyze', async (req, res) => {
     // Track per-folder sizes during deep scan
     const folderSizes: Record<string, number> = {}
 
-    // Cache folder sizes up to 3 levels deep for navigation.
-    // Deeper folders still get scanned for totals but aren't individually cached.
-    const CACHE_DEPTH = 3
-
     async function scan(dir: string, depth = 0): Promise<number> {
       if (!deep && depth > 0) return 0
       if (depth > 10) return 0
@@ -379,8 +375,8 @@ app.get('/api/files/analyze', async (req, res) => {
             if (deep) {
               const subSize = await scan(fullPath, depth + 1)
               dirTotal += subSize
-              // Cache sizes for directories within navigable depth
-              if (depth < CACHE_DEPTH) {
+              // Only cache direct children — keeps response small and fast
+              if (depth === 0) {
                 folderSizes[fullPath] = subSize
               }
             }
