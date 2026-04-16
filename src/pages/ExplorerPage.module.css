@@ -203,6 +203,26 @@
   color: var(--mgr-primary-text);
 }
 
+.breakdownExtKnown {
+  cursor: help;
+}
+
+.extTooltip {
+  position: fixed;
+  transform: translateY(-50%);
+  background: var(--mgr-bg-sunken);
+  border: 1px solid var(--mgr-border);
+  border-radius: var(--mgr-radius);
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--mgr-text-muted);
+  max-width: 220px;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: var(--mgr-shadow);
+}
+
 /* ── Contents — main panel ─────────────────────────── */
 
 .contentsPanel {

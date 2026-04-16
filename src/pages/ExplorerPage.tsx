@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type DirectoryAnalysis, type DirectoryListing } from '../api/client'
 import { Badge, Button, DirectoryPicker, DriveIcon, FileIcon, Input, Loader, Modal, Select } from '../components'
+import { getExtDescription } from '../data/extensionDescriptions'
 import styles from './ExplorerPage.module.css'
 
 function humanSize(bytes: number): string {
@@ -319,6 +320,9 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
   const [ruleTrigger, setRuleTrigger] = useState('file_created')
   const [ruleCreated, setRuleCreated] = useState(false)
 
+  // Extension description tooltip
+  const [extTooltip, setExtTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
+
   const loadDirectory = useCallback(async (dirPath: string, skipCache = false) => {
     if (!dirPath) return
 
@@ -609,16 +613,27 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                   <Loader text="No files" />
                 ) : (
                   <div className={styles.breakdown}>
-                    {analysis.breakdown.map(item => (
-                      <div key={item.extension} className={styles.breakdownRow}>
-                        <span className={styles.breakdownExt}>{item.extension}</span>
-                        <div className={styles.breakdownBarOuter}>
-                          <div className={styles.breakdownBarInner} style={{ width: `${(item.size / maxSize) * 100}%` }} />
+                    {analysis.breakdown.map(item => {
+                      const desc = getExtDescription(item.extension)
+                      return (
+                        <div
+                          key={item.extension}
+                          className={styles.breakdownRow}
+                          onMouseEnter={desc ? e => {
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                            setExtTooltip({ text: desc, x: rect.right + 10, y: rect.top + rect.height / 2 })
+                          } : undefined}
+                          onMouseLeave={desc ? () => setExtTooltip(null) : undefined}
+                        >
+                          <span className={`${styles.breakdownExt} ${desc ? styles.breakdownExtKnown : ''}`}>{item.extension}</span>
+                          <div className={styles.breakdownBarOuter}>
+                            <div className={styles.breakdownBarInner} style={{ width: `${(item.size / maxSize) * 100}%` }} />
+                          </div>
+                          <span className={styles.breakdownCount}>{item.count} · {humanSize(item.size)}</span>
+                          <button className={styles.breakdownRule} onClick={() => openQuickRule(item.extension)}>+ Rule</button>
                         </div>
-                        <span className={styles.breakdownCount}>{item.count} · {humanSize(item.size)}</span>
-                        <button className={styles.breakdownRule} onClick={() => openQuickRule(item.extension)}>+ Rule</button>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -864,6 +879,15 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
           </div>
         )}
       </Modal>
+
+      {extTooltip && (
+        <div
+          className={styles.extTooltip}
+          style={{ left: extTooltip.x, top: extTooltip.y }}
+        >
+          {extTooltip.text}
+        </div>
+      )}
     </div>
   )
 }
