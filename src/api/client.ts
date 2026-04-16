@@ -196,8 +196,21 @@ export const api = {
       return request<DirectoryListing>(`/files/list${params}`)
     },
 
-    analyze: (dirPath: string, deep = false) =>
-      request<DirectoryAnalysis>(`/files/analyze?path=${encodeURIComponent(dirPath)}${deep ? '&deep=true' : ''}`),
+    analyze: (dirPath: string, deep = false) => {
+      const url = `/files/analyze?path=${encodeURIComponent(dirPath)}${deep ? '&deep=true' : ''}`
+      // Deep scans can take minutes on large directories
+      if (deep) {
+        return fetch(`${BASE}${url}`, {
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(300000), // 5 min
+        }).then(async res => {
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`)
+          return data as DirectoryAnalysis
+        })
+      }
+      return request<DirectoryAnalysis>(url)
+    },
 
     size: (dirPath: string) =>
       request<{ path: string; size: number }>(`/files/size?path=${encodeURIComponent(dirPath)}`),

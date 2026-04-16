@@ -337,6 +337,10 @@ app.get('/api/files/size', async (req, res) => {
 })
 
 app.get('/api/files/analyze', async (req, res) => {
+  // Deep scans on large directories can take minutes
+  if (req.query.deep === 'true') {
+    req.socket.setTimeout(300000) // 5 minutes
+  }
   const dirPath = req.query.path as string
   const deep = req.query.deep === 'true'
   if (!dirPath) return res.status(400).json({ error: 'path is required' })
@@ -351,6 +355,10 @@ app.get('/api/files/analyze', async (req, res) => {
     const byExtension: Record<string, { count: number; size: number }> = {}
     // Track per-folder sizes during deep scan
     const folderSizes: Record<string, number> = {}
+
+    // Cache folder sizes up to 3 levels deep for navigation.
+    // Deeper folders still get scanned for totals but aren't individually cached.
+    const CACHE_DEPTH = 3
 
     async function scan(dir: string, depth = 0): Promise<number> {
       if (!deep && depth > 0) return 0
@@ -371,8 +379,10 @@ app.get('/api/files/analyze', async (req, res) => {
             if (deep) {
               const subSize = await scan(fullPath, depth + 1)
               dirTotal += subSize
-              // Record ALL directory sizes, not just top-level
-              folderSizes[fullPath] = subSize
+              // Cache sizes for directories within navigable depth
+              if (depth < CACHE_DEPTH) {
+                folderSizes[fullPath] = subSize
+              }
             }
           } else if (entry.isFile()) {
             const stat = await fs.stat(fullPath)
