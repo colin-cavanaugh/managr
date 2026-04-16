@@ -355,8 +355,10 @@ app.get('/api/files/analyze', async (req, res) => {
     const byExtension: Record<string, { count: number; size: number }> = {}
     // Track per-folder sizes during deep scan
     const folderSizes: Record<string, number> = {}
+    // Track which extensions exist in each top-level subdir (deep scan only)
+    const folderExtensions: Record<string, Set<string>> = {}
 
-    async function scan(dir: string, depth = 0): Promise<number> {
+    async function scan(dir: string, depth = 0, topDir?: string): Promise<number> {
       if (!deep && depth > 0) return 0
       if (depth > 10) return 0
       if (isSkipped(dir)) return 0
@@ -373,7 +375,9 @@ app.get('/api/files/analyze', async (req, res) => {
           if (entry.isDirectory()) {
             if (depth === 0) dirCount++
             if (deep) {
-              const subSize = await scan(fullPath, depth + 1)
+              const subTopDir = depth === 0 ? fullPath : topDir
+              if (depth === 0) folderExtensions[fullPath] = new Set()
+              const subSize = await scan(fullPath, depth + 1, subTopDir)
               dirTotal += subSize
               // Only cache direct children — keeps response small and fast
               if (depth === 0) {
@@ -389,6 +393,7 @@ app.get('/api/files/analyze', async (req, res) => {
             if (!byExtension[ext]) byExtension[ext] = { count: 0, size: 0 }
             byExtension[ext].count++
             byExtension[ext].size += stat.size
+            if (topDir !== undefined) folderExtensions[topDir]?.add(ext)
           }
         } catch { /* skip */ }
       }
@@ -403,7 +408,12 @@ app.get('/api/files/analyze', async (req, res) => {
 
     res.json({
       path: dirPath, deep, fileCount, dirCount, totalSize, breakdown,
-      ...(deep ? { folderSizes } : {}),
+      ...(deep ? {
+        folderSizes,
+        folderExtensions: Object.fromEntries(
+          Object.entries(folderExtensions).map(([k, v]) => [k, Array.from(v)])
+        ),
+      } : {}),
     })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) })
