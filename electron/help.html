@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>managr — User Guide</title>
+  <style>
+    :root {
+      --bg:       #222831;
+      --bg-raised:#2e333d;
+      --bg-sunken:#1a1e26;
+      --border:   #3a3f4a;
+      --text:     #DFD0B8;
+      --muted:    #948979;
+      --primary:  #948979;
+      --accent:   #c4b49e;
+      --radius:   6px;
+      --font:     'Roboto', 'Segoe UI', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.65;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar nav ── */
+    nav {
+      width: 200px;
+      flex-shrink: 0;
+      background: var(--bg-sunken);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      overflow-y: auto;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      padding: 0 18px 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .nav-logo span {
+      font-weight: 300;
+      color: var(--muted);
+    }
+
+    nav a {
+      display: block;
+      padding: 6px 18px;
+      font-size: 12.5px;
+      color: var(--muted);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: color 0.12s, border-color 0.12s;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--text);
+      border-left-color: var(--primary);
+      background: rgba(148,137,121,0.06);
+    }
+
+    nav .nav-section {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 14px 18px 4px;
+      opacity: 0.7;
+    }
+
+    /* ── Main content ── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 36px 48px;
+    }
+
+    section {
+      margin-bottom: 52px;
+      scroll-margin-top: 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 16px 0 6px;
+    }
+
+    p {
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    p strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    ul {
+      padding-left: 18px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    li strong {
+      color: var(--text);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .card p { margin: 0; font-size: 13px; }
+
+    /* ── Comparison table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 14px 0;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 600;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-sunken);
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(58,63,74,0.5);
+      color: var(--muted);
+      vertical-align: top;
+    }
+
+    td:first-child {
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Keyboard shortcut reference ── */
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 12.5px;
+    }
+
+    .shortcut-action {
+      color: var(--muted);
+      flex: 1;
+    }
+
+    kbd {
+      background: var(--bg-sunken);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    /* ── Hint box ── */
+    .hint {
+      background: rgba(148,137,121,0.08);
+      border: 1px solid rgba(148,137,121,0.25);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 12px 0;
+    }
+
+    .hint strong { color: var(--text); }
+
+    /* ── Ext badge ── */
+    .ext {
+      display: inline-block;
+      background: var(--bg-sunken);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11.5px;
+      font-family: monospace;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">managr<span> guide</span></div>
+  <a href="#overview" onclick="scrollTo('overview')">Overview</a>
+  <div class="nav-section">Explorer</div>
+  <a href="#file-types" onclick="scrollTo('file-types')">File Types Panel</a>
+  <a href="#volume" onclick="scrollTo('volume')">Volume Loading</a>
+  <a href="#deep-scan" onclick="scrollTo('deep-scan')">Deep Scan</a>
+  <a href="#filtering" onclick="scrollTo('filtering')">Extension Filter</a>
+  <a href="#search" onclick="scrollTo('search')">Search</a>
+  <div class="nav-section">Features</div>
+  <a href="#rules" onclick="scrollTo('rules')">Automation Rules</a>
+  <a href="#snapshots" onclick="scrollTo('snapshots')">Snapshots &amp; Rollback</a>
+  <a href="#pinned" onclick="scrollTo('pinned')">Pinned &amp; Frequent</a>
+  <a href="#skip" onclick="scrollTo('skip')">Skip Folders</a>
+  <div class="nav-section">Reference</div>
+  <a href="#shortcuts" onclick="scrollTo('shortcuts')">Quick Reference</a>
+</nav>
+
+<main id="main">
+
+  <section id="overview">
+    <h1>managr</h1>
+    <p class="subtitle">Cross-platform file management and automation for your desktop.</p>
+    <p><strong>managr</strong> gives you a real-time view of what's inside any directory — how much space each folder occupies, which file types are present, and where they live inside the tree. You can create automation rules that move, organize, or clean up files automatically as they appear, and roll back any operation with one click.</p>
+    <div class="hint">
+      <strong>Quick start:</strong> Open the Explorer tab, navigate to any folder, and the File Types breakdown populates immediately. Hover an extension like <span class="ext">.ba2</span> to see what it is, or click it to filter the file list to only that type.
+    </div>
+  </section>
+
+  <section id="file-types">
+    <h2>File Types Panel</h2>
+    <p>The left panel in the Explorer shows every extension found in the current directory, ranked by total size. Each row includes:</p>
+    <ul>
+      <li><strong>Size bar</strong> — visual relative footprint compared to the largest type</li>
+      <li><strong>Count · Size</strong> — number of files and combined size</li>
+      <li><strong>+ Rule</strong> — opens a quick-rule dialog pre-filled for that extension</li>
+    </ul>
+    <h3>Extension Tooltips</h3>
+    <p>Hover over any extension to see a plain-English description. managr ships with descriptions for 300+ extensions, from common formats to niche ones:</p>
+    <ul>
+      <li><span class="ext">.ba2</span> — Bethesda Archive 2 — game data for Fallout 4, Starfield</li>
+      <li><span class="ext">.gguf</span> — Quantized LLM model format used by llama.cpp / Ollama</li>
+      <li><span class="ext">.parquet</span> — Columnar data format for big data / analytics</li>
+    </ul>
+    <p>If an extension has a known description, its label shows a <kbd>help</kbd> cursor. Unknown extensions show no tooltip.</p>
+  </section>
+
+  <section id="volume">
+    <h2>Volume Loading (Calculate Volume)</h2>
+    <p>Folder sizes are loaded one at a time in the background so the UI stays responsive. The status appears in the sort bar:</p>
+    <ul>
+      <li><strong>Pause Volume</strong> — stops loading if you don't need sizes yet</li>
+      <li><strong>Calculate Volume</strong> — appears at drive roots and after pausing; click to start or resume</li>
+      <li><strong>✓ Volume</strong> — all sizes in the current view are loaded</li>
+    </ul>
+    <div class="hint">
+      <strong>Session cache:</strong> Folder sizes are remembered for your entire session. Navigating away and back to a directory loads instantly from cache — no re-scanning.
+    </div>
+    <p>At drive roots (<span class="ext">C:\</span>, <span class="ext">/mnt/c</span>, <span class="ext">/</span>) auto-scanning is disabled by default — use <strong>Calculate Volume</strong> to start manually.</p>
+  </section>
+
+  <section id="deep-scan">
+    <h2>Deep Scan vs Calculate Volume</h2>
+    <p>These are two different operations with different scope:</p>
+
+    <table>
+      <tr>
+        <th>Feature</th>
+        <th>Calculate Volume</th>
+        <th>Scan All Subfolders</th>
+      </tr>
+      <tr>
+        <td>Folder sizes</td>
+        <td>Top-level subfolders only</td>
+        <td>Every nested folder, cached globally</td>
+      </tr>
+      <tr>
+        <td>Extension breakdown</td>
+        <td>Files in current folder only</td>
+        <td>Entire subtree recursively</td>
+      </tr>
+      <tr>
+        <td>Extension filtering for folders</td>
+        <td>Not available</td>
+        <td>Available — folders shown if they contain that type</td>
+      </tr>
+      <tr>
+        <td>Speed</td>
+        <td>Fast (parallel stat calls)</td>
+        <td>Slower on large directories; can take minutes</td>
+      </tr>
+      <tr>
+        <td>Stop mid-scan</td>
+        <td>Pause / Resume</td>
+        <td>Stop Deep Scan (top-right of sort bar)</td>
+      </tr>
+    </table>
+
+    <div class="hint">
+      After a deep scan, all discovered folder sizes are added to the session cache. Navigating into any subfolder that was scanned will have its children's sizes available immediately.
+    </div>
+  </section>
+
+  <section id="filtering">
+    <h2>Extension Filter</h2>
+    <p>Click any extension in the File Types panel to filter the Contents list to only show items of that type. An active filter displays as a pill in the Contents header:</p>
+    <p style="margin:10px 0"><span style="background:#948979;color:#222831;border-radius:10px;padding:3px 9px;font-size:12px;font-weight:600">.ba2 — Bethesda Archive 2 ×</span></p>
+    <ul>
+      <li>Click the pill (or the extension row again) to clear the filter</li>
+      <li>Hover the pill to see the full description</li>
+    </ul>
+
+    <h3>Filtering with and without Deep Scan</h3>
+    <div class="card">
+      <div class="card-title">Without Deep Scan</div>
+      <p>Only files with that extension are shown. Folders are hidden because their contents aren't known. A hint bar offers a one-click shortcut to run Deep Scan and enable folder filtering.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">With Deep Scan</div>
+      <p>Folders are also shown if they contain at least one file of that extension anywhere inside them — no matter how deeply nested. This lets you instantly see which directories are home to that file type.</p>
+    </div>
+  </section>
+
+  <section id="search">
+    <h2>Search</h2>
+    <ul>
+      <li><strong>Filter by name</strong> — instantly filters the visible list by filename (no server call, updates as you type)</li>
+      <li><strong>Deep search</strong> — sends a recursive server-side search across all subdirectories, with 400ms debounce to avoid spamming</li>
+    </ul>
+    <p>Deep search and extension filter can be used together: filter by <span class="ext">.png</span> first, then type a name pattern to narrow within that set.</p>
+  </section>
+
+  <section id="rules">
+    <h2>Automation Rules</h2>
+    <p>Rules watch a directory and automatically act on files when they match a set of conditions.</p>
+    <h3>Parts of a rule</h3>
+    <ul>
+      <li><strong>Trigger</strong> — when the rule fires: file created, file modified, or manual</li>
+      <li><strong>Conditions</strong> — what must match: extension, name pattern, size threshold</li>
+      <li><strong>Actions</strong> — what to do: move, copy, rename, delete, or back up</li>
+    </ul>
+    <h3>Quick rule from Explorer</h3>
+    <p>Click <strong>+ Rule</strong> on any extension row to open a dialog pre-filled with that extension as the condition and the current directory as the watch path. Fill in a destination and click Create Rule — done.</p>
+    <h3>Running rules</h3>
+    <p>Enable the file watcher from the Watcher section to have rules fire automatically in real time. Or run any rule manually from the Rules page with the Run button.</p>
+  </section>
+
+  <section id="snapshots">
+    <h2>Snapshots &amp; Rollback</h2>
+    <p>Every file operation — whether from a rule or manual action — is logged in the Activity page. Bulk operations (rule runs, bulk move, bulk delete) create a <strong>snapshot batch</strong>.</p>
+    <p>From the Snapshots page, click <strong>Rollback</strong> on any batch to restore all files to their original locations in one click. Individual activity entries on the Activity page can also be inspected to see exactly what moved where.</p>
+    <div class="hint">
+      <strong>Note:</strong> Rollback moves files back — it doesn't undo renaming of the target directory itself. If a destination folder was also renamed or deleted after the operation, rollback will attempt the move but may report an error.
+    </div>
+  </section>
+
+  <section id="pinned">
+    <h2>Pinned &amp; Frequent Directories</h2>
+    <ul>
+      <li><strong>Pinned</strong> — manually bookmark any directory from the sidebar. Pinned directories persist across sessions.</li>
+      <li><strong>Frequent</strong> — the four most-visited directories are automatically surfaced in the sidebar, based on how many times you've navigated to them.</li>
+    </ul>
+  </section>
+
+  <section id="skip">
+    <h2>Skip Folders</h2>
+    <p>Mark a folder as skipped using the <kbd>⊘</kbd> button in its action row. Skipped folders are:</p>
+    <ul>
+      <li>Excluded from volume loading (size shown as "skipped")</li>
+      <li>Excluded from deep scans and extension analysis</li>
+      <li>Excluded from watcher events and rule triggers</li>
+    </ul>
+    <p>Useful for virtual filesystems, package caches (<span class="ext">node_modules</span>), or system folders you don't want included. Click <kbd>⊘</kbd> again on a skipped folder to unskip it.</p>
+  </section>
+
+  <section id="shortcuts">
+    <h2>Quick Reference</h2>
+    <div class="shortcut-grid">
+      <div class="shortcut-row"><span class="shortcut-action">Navigate into folder</span><kbd>Click name or icon</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Go up one level</span><kbd>Click ..</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Filter by extension</span><kbd>Click extension row</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Clear extension filter</span><kbd>Click pill ×</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Extension description</span><kbd>Hover extension</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Select file/folder</span><kbd>Click checkbox</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Range select</span><kbd>Shift + Click</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Quick rule for extension</span><kbd>Click + Rule</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Open file</span><kbd>⧉ button</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Show in file explorer</span><kbd>📂 button</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Skip folder from scans</span><kbd>⊘ button</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Pause volume loading</span><kbd>Pause Volume</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Start/resume volume</span><kbd>Calculate Volume</kbd></div>
+      <div class="shortcut-row"><span class="shortcut-action">Deep scan subtree</span><kbd>Scan All Subfolders</kbd></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  function scrollTo(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' })
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'))
+    const link = document.querySelector(`nav a[href="#${id}"]`)
+    if (link) link.classList.add('active')
+  }
+
+  // Highlight active section on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'))
+        const link = document.querySelector(`nav a[href="#${entry.target.id}"]`)
+        if (link) link.classList.add('active')
+      }
+    })
+  }, { root: document.getElementById('main'), threshold: 0.4 })
+
+  document.querySelectorAll('section[id]').forEach(s => observer.observe(s))
+</script>
+
+</body>
+</html>

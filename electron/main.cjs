@@ -1,9 +1,10 @@
-const { app, BrowserWindow, shell } = require('electron')
+const { app, BrowserWindow, Menu, shell } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { fork } = require('child_process')
 
 let mainWindow = null
+let helpWindow = null
 let apiProcess = null
 const API_PORT = 3456
 const isDev = process.env.NODE_ENV === 'development'
@@ -80,7 +81,52 @@ function createWindow() {
   mainWindow.on('closed', () => { mainWindow = null })
 }
 
+function createHelpWindow() {
+  if (helpWindow) { helpWindow.focus(); return }
+  helpWindow = new BrowserWindow({
+    width: 900,
+    height: 680,
+    minWidth: 640,
+    minHeight: 440,
+    title: 'managr — User Guide',
+    backgroundColor: '#222831',
+    parent: mainWindow ?? undefined,
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
+  })
+  helpWindow.loadFile(path.join(__dirname, 'help.html'))
+  helpWindow.setMenuBarVisibility(false)
+  helpWindow.on('closed', () => { helpWindow = null })
+}
+
+function buildMenu() {
+  const isMac = process.platform === 'darwin'
+  const template = [
+    ...(isMac ? [{ role: 'appMenu' }] : []),
+    { role: 'fileMenu' },
+    { role: 'editMenu' },
+    { role: 'viewMenu' },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'User Guide',
+          accelerator: 'F1',
+          click: createHelpWindow,
+        },
+        { type: 'separator' },
+        {
+          label: 'Open Dev Tools',
+          accelerator: isMac ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
+          click: () => mainWindow?.webContents.toggleDevTools(),
+        },
+      ],
+    },
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
 app.whenReady().then(async () => {
+  buildMenu()
   createWindow()
 
   console.log('[managr] Starting API server...')

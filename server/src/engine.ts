@@ -291,10 +291,13 @@ export class RulesEngine {
         const name = path.basename(filePath, ext)
         const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
 
-        const newName = action.pattern
+        let newName = action.pattern
           .replace('{name}', name)
           .replace('{ext}', ext)
           .replace('{date}', date)
+
+        // Auto-append original extension if the pattern didn't include {ext}
+        if (!action.pattern.includes('{ext}') && ext) newName += ext
 
         const dest = path.join(dir, newName)
         await fs.rename(filePath, dest)
