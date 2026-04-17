@@ -239,6 +239,11 @@
   opacity: 0.8;
 }
 
+.extFilterPillDesc {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
 .extFilterHint {
   padding: 4px 14px;
   font-size: 11px;

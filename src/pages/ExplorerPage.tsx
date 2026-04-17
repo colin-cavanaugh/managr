@@ -680,11 +680,17 @@ export function ExplorerPage({ onPathChange, externalNav, externalNavTrigger }: 
                     ? `${extFilteredEntries.length} of ${listing.entries.length}`
                     : `${listing.entries.length} items`}
                 </Badge>}
-                {selectedExt && (
-                  <button className={styles.extFilterPill} onClick={() => setSelectedExt(null)}>
-                    {selectedExt} ×
-                  </button>
-                )}
+                {selectedExt && (() => {
+                  const desc = getExtDescription(selectedExt)
+                  const shortDesc = desc ? desc.split(' — ')[0] : null
+                  return (
+                    <button className={styles.extFilterPill} onClick={() => setSelectedExt(null)} title={desc ?? undefined}>
+                      {selectedExt}
+                      {shortDesc && <span className={styles.extFilterPillDesc}> — {shortDesc}</span>}
+                      {' ×'}
+                    </button>
+                  )
+                })()}
               </div>
               {selectedExt && !deepScan && (
                 <div className={styles.extFilterHint}>
